@@ -6,40 +6,20 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"gocasts.ir/go-fundamentals/todo-cli/storage"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type User struct {
-	ID       uint
-	Name     string
-	Email    string
-	Password []uint8
-}
-
-type Task struct {
-	Title    string
-	DueDate  string
-	Category uint
-	IsDone   bool
-	UserId   uint
-}
-
-type Category struct {
-	ID     uint
-	Title  string
-	Color  string
-	UserId uint
-}
-
 var (
-	authenticatedUser *User
-	userTasks         []*Task
-	userStorage       []*User
-	categories        []*Category
-	tasks             []*Task
+	authenticatedUser *entity.User
+	userTasks         []*entity.Task
+	userStorage       []*entity.User
+	categories        []*entity.Category
+	tasks             []*entity.Task
 
 	scanner *bufio.Scanner
 )
@@ -71,7 +51,7 @@ func init() {
 
 		usersDataByte := readFile(usersFile)
 		usersStr := strings.Split(string(usersDataByte), "\n")
-		var u *User = new(User)
+		var u *entity.User = new(entity.User)
 
 		for _, us := range usersStr {
 			if us == "" {
@@ -84,14 +64,14 @@ func init() {
 			}
 
 			userStorage = append(userStorage, u)
-			u = new(User)
+			u = new(entity.User)
 		}
 	}()
 
 	// load tasks
 	func() {
 
-		var t *Task = &Task{}
+		var t *entity.Task = &entity.Task{}
 
 		tasksDataByte := readFile(tasksFile)
 		tasksStr := strings.Split(string(tasksDataByte), "\n")
@@ -108,14 +88,14 @@ func init() {
 			}
 
 			tasks = append(tasks, t)
-			t = &Task{}
+			t = &entity.Task{}
 		}
 	}()
 
 	// load categories
 	func() {
 
-		var c *Category = &Category{}
+		var c *entity.Category = &entity.Category{}
 
 		categoriesDataByte := readFile(categoriesFile)
 		categoriesStr := strings.Split(string(categoriesDataByte), "\n")
@@ -132,12 +112,12 @@ func init() {
 			}
 
 			categories = append(categories, c)
-			c = &Category{}
+			c = &entity.Category{}
 		}
 	}()
 }
 
-func newCategory() uint {
+func newCategory(store storage.CategoryStore) uint {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -146,7 +126,7 @@ func newCategory() uint {
 	var color string = readInput()
 
 	cId := uint(len(categories) + 1)
-	c := &Category{
+	c := &entity.Category{
 		ID:     cId,
 		Title:  title,
 		Color:  color,
@@ -155,14 +135,15 @@ func newCategory() uint {
 
 	categories = append(categories, c)
 
-	writeToFile(*serializedData(*c), categoriesFile)
+	//writeToFile(*serializedData(*c), categoriesFile)
+	store.Save(c)
 
 	fmt.Printf("category [%s] is create!\n", c.Title)
 
 	return cId
 }
 
-func newTask() {
+func newTask(store storage.TaskStore) {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -173,7 +154,7 @@ func newTask() {
 	fmt.Print("enter category: ")
 	var category, _ = strconv.Atoi(readInput())
 
-	t := &Task{
+	t := &entity.Task{
 		Title:    title,
 		DueDate:  dueDate,
 		Category: uint(category),
@@ -182,7 +163,8 @@ func newTask() {
 	}
 	tasks = append(tasks, t)
 
-	writeToFile(*serializedData(*t), tasksFile)
+	//writeToFile(*serializedData(*t), tasksFile)
+	store.Save(t)
 
 	fmt.Printf("task [%s] is create!\n", t.Title)
 }
@@ -210,7 +192,7 @@ func writeToFile(object []byte, fileName string) {
 	}(file)
 }
 
-func listTask() []*Task {
+func listTask() []*entity.Task {
 
 	for _, task := range tasks {
 		if task.UserId == authenticatedUser.ID {
@@ -221,7 +203,7 @@ func listTask() []*Task {
 	return userTasks
 }
 
-func tasksByDate() []*Task {
+func tasksByDate() []*entity.Task {
 
 	fmt.Print("enter date: ")
 	var date string = readInput()
@@ -230,7 +212,7 @@ func tasksByDate() []*Task {
 		listTask()
 	}
 
-	var tbd []*Task
+	var tbd []*entity.Task
 	for _, task := range userTasks {
 		if task.DueDate == date {
 			tbd = append(tbd, task)
@@ -266,7 +248,27 @@ func login() {
 	}
 }
 
-func registeredUser() {
+type userStore struct {
+	userFilePath string
+}
+type taskStore struct {
+	taskFilePath string
+}
+type categoryStore struct {
+	categoryFilePath string
+}
+
+func (f *userStore) Save(user *entity.User) {
+	writeToFile(*serializedData(*user), f.userFilePath)
+}
+func (f *taskStore) Save(task *entity.Task) {
+	writeToFile(*serializedData(*task), f.taskFilePath)
+}
+func (f *categoryStore) Save(category *entity.Category) {
+	writeToFile(*serializedData(*category), f.categoryFilePath)
+}
+
+func registeredUser(store storage.UserStore) {
 
 	fmt.Print("register user!\n")
 
@@ -279,7 +281,7 @@ func registeredUser() {
 	fmt.Print("enter password: ")
 	var password []uint8 = hashPassword(readInput())
 
-	user := &User{
+	user := &entity.User{
 		ID:       uint(len(userStorage) + 1),
 		Name:     name,
 		Email:    email,
@@ -288,7 +290,9 @@ func registeredUser() {
 
 	userStorage = append(userStorage, user)
 
-	writeToFile(*serializedData(*user), usersFile)
+	//writeToFile(*serializedData(*user), usersFile)
+
+	store.Save(user)
 
 	fmt.Printf("%s is registerd!\n", user.Email)
 }
@@ -320,15 +324,27 @@ func runCommand(command string) {
 		return
 	}
 
+	var uStore storage.UserStore
+	var userFileStore = &userStore{userFilePath: usersFile}
+	uStore = userFileStore
+
+	var cStore storage.CategoryStore
+	var categoryFileStore = &categoryStore{categoryFilePath: categoriesFile}
+	cStore = categoryFileStore
+
+	var tStore storage.TaskStore
+	var taskFileStore = &taskStore{taskFilePath: tasksFile}
+	tStore = taskFileStore
+
 	switch command {
 	case "login":
 		login()
 	case "register-user":
-		registeredUser()
+		registeredUser(uStore)
 	case "new-category":
-		newCategory()
+		newCategory(cStore)
 	case "new-task":
-		newTask()
+		newTask(tStore)
 	case "list-task":
 		printTask(listTask())
 	case "tasks-date":
@@ -340,7 +356,7 @@ func runCommand(command string) {
 	}
 }
 
-func printTask(tasks []*Task) {
+func printTask(tasks []*entity.Task) {
 	for _, t := range tasks {
 		fmt.Printf(
 			"title: %s, userId: %d, dueDate: %s, isDone: %v, cat: %d\n",
