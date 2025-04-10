@@ -45,76 +45,6 @@ func init() {
 		_ = fTasks.Close()
 		_ = fCategories.Close()
 	}()
-
-	// load users
-	func() {
-
-		usersDataByte := readFile(usersFile)
-		usersStr := strings.Split(string(usersDataByte), "\n")
-		var u *entity.User = new(entity.User)
-
-		for _, us := range usersStr {
-			if us == "" {
-
-				continue
-			}
-			if err := json.Unmarshal([]byte(us), u); err != nil {
-
-				panic(err)
-			}
-
-			userStorage = append(userStorage, u)
-			u = new(entity.User)
-		}
-	}()
-
-	// load tasks
-	func() {
-
-		var t *entity.Task = &entity.Task{}
-
-		tasksDataByte := readFile(tasksFile)
-		tasksStr := strings.Split(string(tasksDataByte), "\n")
-
-		for _, ts := range tasksStr {
-
-			if ts == "" {
-
-				continue
-			}
-			if err := json.Unmarshal([]byte(ts), t); err != nil {
-
-				panic(err)
-			}
-
-			tasks = append(tasks, t)
-			t = &entity.Task{}
-		}
-	}()
-
-	// load categories
-	func() {
-
-		var c *entity.Category = &entity.Category{}
-
-		categoriesDataByte := readFile(categoriesFile)
-		categoriesStr := strings.Split(string(categoriesDataByte), "\n")
-
-		for _, cs := range categoriesStr {
-
-			if cs == "" {
-
-				continue
-			}
-			if err := json.Unmarshal([]byte(cs), c); err != nil {
-
-				panic(err)
-			}
-
-			categories = append(categories, c)
-			c = &entity.Category{}
-		}
-	}()
 }
 
 //
@@ -148,6 +78,26 @@ type FileStore[T any] struct {
 
 func (fs *FileStore[T]) Save(t *T) {
 	writeToFile(*serializedData(*t), fs.FilePath)
+}
+
+func (fs *FileStore[T]) Load(t *T) []*T {
+	dataByte := readFile(fs.FilePath)
+	dataStr := strings.Split(string(dataByte), "\n")
+	var objects []*T = nil
+	var object *T = new(T)
+
+	for _, obj := range dataStr {
+		if obj == "" {
+			continue
+		}
+		if err := json.Unmarshal([]byte(obj), object); err != nil {
+			panic(err)
+		}
+		objects = append(objects, object)
+		object = new(T)
+	}
+
+	return objects
 }
 
 func registeredUser(store storage.Store[entity.User]) {
@@ -391,6 +341,15 @@ func readFile(fileName string) []byte {
 }
 
 func main() {
+
+	var userStore = &FileStore[entity.User]{FilePath: usersFile}
+	userStorage = userStore.Load(new(entity.User))
+
+	var taskStore = &FileStore[entity.Task]{FilePath: tasksFile}
+	tasks = taskStore.Load(new(entity.Task))
+
+	var categoryStore = &FileStore[entity.Category]{FilePath: categoriesFile}
+	categories = categoryStore.Load(new(entity.Category))
 
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")
