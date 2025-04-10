@@ -45,6 +45,16 @@ func init() {
 		_ = fTasks.Close()
 		_ = fCategories.Close()
 	}()
+
+	// load data from storage
+	var userStore = &FileStore[entity.User]{FilePath: usersFile, PermFile: permFile}
+	userStorage = userStore.Load(new(entity.User))
+
+	var taskStore = &FileStore[entity.Task]{FilePath: tasksFile, PermFile: permFile}
+	tasks = taskStore.Load(new(entity.Task))
+
+	var categoryStore = &FileStore[entity.Category]{FilePath: categoriesFile, PermFile: permFile}
+	categories = categoryStore.Load(new(entity.Category))
 }
 
 //
@@ -74,14 +84,15 @@ func init() {
 
 type FileStore[T any] struct {
 	FilePath string
+	PermFile int
 }
 
 func (fs *FileStore[T]) Save(t *T) {
-	writeToFile(*serializedData(*t), fs.FilePath)
+	fs.writeToFile(*serializedData(*t))
 }
 
 func (fs *FileStore[T]) Load(t *T) []*T {
-	dataByte := readFile(fs.FilePath)
+	dataByte := fs.readFile()
 	dataStr := strings.Split(string(dataByte), "\n")
 	var objects []*T = nil
 	var object *T = new(T)
@@ -98,6 +109,47 @@ func (fs *FileStore[T]) Load(t *T) []*T {
 	}
 
 	return objects
+}
+
+func (fs *FileStore[T]) writeToFile(object []byte) {
+
+	// create object of file
+	file, _ := os.OpenFile(fs.FilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(fs.PermFile))
+
+	// defer file close
+	defer func(f *os.File) {
+		cErr := f.Close()
+		if cErr != nil {
+			panic(cErr)
+		}
+	}(file)
+
+	object = append(object, '\n')
+
+	func(f *os.File) {
+		_, wErr := file.Write(object)
+		if wErr != nil {
+			panic(wErr)
+		}
+	}(file)
+}
+
+func (fs *FileStore[T]) readFile() []byte {
+	file, _ := os.OpenFile(fs.FilePath, os.O_RDONLY, os.FileMode(fs.PermFile))
+
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file)
+
+	bs, rErr := io.ReadAll(file)
+	if rErr != nil {
+		panic(rErr)
+	}
+
+	return bs
 }
 
 func registeredUser(store storage.Store[entity.User]) {
@@ -188,29 +240,6 @@ func listTask() []*entity.Task {
 	return userTasks
 }
 
-func writeToFile(object []byte, fileName string) {
-
-	// create object of file
-	file, _ := os.OpenFile(fileName, os.O_CREATE|os.O_APPEND|os.O_RDWR, permFile)
-
-	// defer file close
-	defer func(f *os.File) {
-		cErr := f.Close()
-		if cErr != nil {
-			panic(cErr)
-		}
-	}(file)
-
-	object = append(object, '\n')
-
-	func(f *os.File) {
-		_, wErr := file.Write(object)
-		if wErr != nil {
-			panic(wErr)
-		}
-	}(file)
-}
-
 func tasksByDate() []*entity.Task {
 
 	fmt.Print("enter date: ")
@@ -297,7 +326,7 @@ func runCommand(command string) {
 	case "new-task":
 		newTask(tStore)
 	case "list-task":
-		printTask(listTask())
+		printTasks(listTask())
 	case "tasks-date":
 		fmt.Println(tasksByDate())
 	case "exit":
@@ -307,12 +336,9 @@ func runCommand(command string) {
 	}
 }
 
-func printTask(tasks []*entity.Task) {
+func printTasks(tasks []*entity.Task) {
 	for _, t := range tasks {
-		fmt.Printf(
-			"title: %s, userId: %d, dueDate: %s, isDone: %v, cat: %d\n",
-			t.Title, t.UserId, t.DueDate, t.IsDone, t.Category,
-		)
+		fmt.Print(t.String())
 	}
 }
 
@@ -322,34 +348,7 @@ func readInput() string {
 	return scanner.Text()
 }
 
-func readFile(fileName string) []byte {
-	file, _ := os.OpenFile(fileName, os.O_RDONLY, permFile)
-
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(file)
-
-	bs, rErr := io.ReadAll(file)
-	if rErr != nil {
-		panic(rErr)
-	}
-
-	return bs
-}
-
 func main() {
-
-	var userStore = &FileStore[entity.User]{FilePath: usersFile}
-	userStorage = userStore.Load(new(entity.User))
-
-	var taskStore = &FileStore[entity.Task]{FilePath: tasksFile}
-	tasks = taskStore.Load(new(entity.Task))
-
-	var categoryStore = &FileStore[entity.Category]{FilePath: categoriesFile}
-	categories = categoryStore.Load(new(entity.Category))
 
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")
