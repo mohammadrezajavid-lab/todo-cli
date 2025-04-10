@@ -117,28 +117,37 @@ func init() {
 	}()
 }
 
-type userStore struct {
-	userFilePath string
+//
+//type userStore struct {
+//	userFilePath string
+//}
+//
+//func (f *userStore) Save(user *entity.User) {
+//	writeToFile(*serializedData(user), f.userFilePath)
+//}
+//
+//type taskStore struct {
+//	taskFilePath string
+//}
+//
+//func (f *taskStore) Save(task *entity.Task) {
+//	writeToFile(*serializedData(*task), f.taskFilePath)
+//}
+//
+//type categoryStore struct {
+//	categoryFilePath string
+//}
+//
+//func (f *categoryStore) Save(category *entity.Category) {
+//	writeToFile(*serializedData(*category), f.categoryFilePath)
+//}
+
+type FileStore[T any] struct {
+	FilePath string
 }
 
-func (f *userStore) Save(user *entity.User) {
-	writeToFile(*serializedData(user), f.userFilePath)
-}
-
-type taskStore struct {
-	taskFilePath string
-}
-
-func (f *taskStore) Save(task *entity.Task) {
-	writeToFile(*serializedData(*task), f.taskFilePath)
-}
-
-type categoryStore struct {
-	categoryFilePath string
-}
-
-func (f *categoryStore) Save(category *entity.Category) {
-	writeToFile(*serializedData(*category), f.categoryFilePath)
+func (fs *FileStore[T]) Save(t *T) {
+	writeToFile(*serializedData(*t), fs.FilePath)
 }
 
 func registeredUser(store storage.Store[entity.User]) {
@@ -324,11 +333,9 @@ func runCommand(command string) {
 		return
 	}
 
-	var uStore storage.Store[entity.User] = &userStore{userFilePath: usersFile}
-
-	var cStore storage.Store[entity.Category] = &categoryStore{categoryFilePath: categoriesFile}
-
-	var tStore storage.Store[entity.Task] = &taskStore{taskFilePath: tasksFile}
+	var uStore = &FileStore[entity.User]{FilePath: usersFile}
+	var cStore = &FileStore[entity.Category]{FilePath: categoriesFile}
+	var tStore = &FileStore[entity.Task]{FilePath: tasksFile}
 
 	switch command {
 	case "login":
