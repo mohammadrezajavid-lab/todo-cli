@@ -28,7 +28,6 @@ func init() {
 	scanner = bufio.NewScanner(os.Stdin)
 
 	func() {
-
 		fUsers, _ := os.OpenFile(constant.UsersFile, os.O_CREATE, constant.PermFile)
 		fTasks, _ := os.OpenFile(constant.TasksFile, os.O_CREATE, constant.PermFile)
 		fCategories, _ := os.OpenFile(constant.CategoriesFile, os.O_CREATE, constant.PermFile)
@@ -37,16 +36,6 @@ func init() {
 		_ = fTasks.Close()
 		_ = fCategories.Close()
 	}()
-
-	// load data from storage
-	var userStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile, PermFile: constant.PermFile}
-	userStorage = userStore.Load(new(entity.User))
-
-	var taskStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile, PermFile: constant.PermFile}
-	tasks = taskStore.Load(new(entity.Task))
-
-	var categoryStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile, PermFile: constant.PermFile}
-	categories = categoryStore.Load(new(entity.Category))
 }
 
 func registeredUser(store contract.Store[entity.User]) {
@@ -190,17 +179,13 @@ func hashPassword(password string) []uint8 {
 	return bs
 }
 
-func runCommand(command string) {
+func runCommand(command string, uStore contract.Store[entity.User], tStore contract.Store[entity.Task], cStore contract.Store[entity.Category]) {
 
 	if command != "login" && command != "register-user" && command != "exit" && authenticatedUser == nil {
 		login()
 
 		return
 	}
-
-	var uStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile}
-	var cStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile}
-	var tStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile}
 
 	switch command {
 	case "login":
@@ -240,8 +225,18 @@ func main() {
 	flag.StringVar(&command, "command", "no-command", "command to run")
 	flag.Parse()
 
+	// load data from storage
+	var userStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile, PermFile: constant.PermFile}
+	userStorage = append(userStorage, userStore.Load(new(entity.User))...)
+
+	var taskStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile, PermFile: constant.PermFile}
+	tasks = append(tasks, taskStore.Load(new(entity.Task))...)
+
+	var categoryStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile, PermFile: constant.PermFile}
+	categories = append(categories, categoryStore.Load(new(entity.Category))...)
+
 	for {
-		runCommand(command)
+		runCommand(command, userStore, taskStore, categoryStore)
 
 		fmt.Print("please enter another command: ")
 		command = readInput()
