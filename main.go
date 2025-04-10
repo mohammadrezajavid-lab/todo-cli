@@ -117,7 +117,58 @@ func init() {
 	}()
 }
 
-func newCategory(store storage.CategoryStore) uint {
+type userStore struct {
+	userFilePath string
+}
+
+func (f *userStore) Save(user *entity.User) {
+	writeToFile(*serializedData(user), f.userFilePath)
+}
+
+type taskStore struct {
+	taskFilePath string
+}
+
+func (f *taskStore) Save(task *entity.Task) {
+	writeToFile(*serializedData(*task), f.taskFilePath)
+}
+
+type categoryStore struct {
+	categoryFilePath string
+}
+
+func (f *categoryStore) Save(category *entity.Category) {
+	writeToFile(*serializedData(*category), f.categoryFilePath)
+}
+
+func registeredUser(store storage.Store[entity.User]) {
+
+	fmt.Print("register user!\n")
+
+	fmt.Print("enter name: ")
+	var name string = readInput()
+
+	fmt.Print("enter email: ")
+	var email string = readInput()
+
+	fmt.Print("enter password: ")
+	var password []uint8 = hashPassword(readInput())
+
+	user := &entity.User{
+		ID:       uint(len(userStorage) + 1),
+		Name:     name,
+		Email:    email,
+		Password: password,
+	}
+
+	userStorage = append(userStorage, user)
+
+	store.Save(user)
+
+	fmt.Printf("%s is registerd!\n", user.Email)
+}
+
+func newCategory(store storage.Store[entity.Category]) uint {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -135,7 +186,6 @@ func newCategory(store storage.CategoryStore) uint {
 
 	categories = append(categories, c)
 
-	//writeToFile(*serializedData(*c), categoriesFile)
 	store.Save(c)
 
 	fmt.Printf("category [%s] is create!\n", c.Title)
@@ -143,7 +193,7 @@ func newCategory(store storage.CategoryStore) uint {
 	return cId
 }
 
-func newTask(store storage.TaskStore) {
+func newTask(store storage.Store[entity.Task]) {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -163,10 +213,20 @@ func newTask(store storage.TaskStore) {
 	}
 	tasks = append(tasks, t)
 
-	//writeToFile(*serializedData(*t), tasksFile)
 	store.Save(t)
 
 	fmt.Printf("task [%s] is create!\n", t.Title)
+}
+
+func listTask() []*entity.Task {
+
+	for _, task := range tasks {
+		if task.UserId == authenticatedUser.ID {
+			userTasks = append(userTasks, task)
+		}
+	}
+
+	return userTasks
 }
 
 func writeToFile(object []byte, fileName string) {
@@ -190,17 +250,6 @@ func writeToFile(object []byte, fileName string) {
 			panic(wErr)
 		}
 	}(file)
-}
-
-func listTask() []*entity.Task {
-
-	for _, task := range tasks {
-		if task.UserId == authenticatedUser.ID {
-			userTasks = append(userTasks, task)
-		}
-	}
-
-	return userTasks
 }
 
 func tasksByDate() []*entity.Task {
@@ -248,55 +297,6 @@ func login() {
 	}
 }
 
-type userStore struct {
-	userFilePath string
-}
-type taskStore struct {
-	taskFilePath string
-}
-type categoryStore struct {
-	categoryFilePath string
-}
-
-func (f *userStore) Save(user *entity.User) {
-	writeToFile(*serializedData(*user), f.userFilePath)
-}
-func (f *taskStore) Save(task *entity.Task) {
-	writeToFile(*serializedData(*task), f.taskFilePath)
-}
-func (f *categoryStore) Save(category *entity.Category) {
-	writeToFile(*serializedData(*category), f.categoryFilePath)
-}
-
-func registeredUser(store storage.UserStore) {
-
-	fmt.Print("register user!\n")
-
-	fmt.Print("enter name: ")
-	var name string = readInput()
-
-	fmt.Print("enter email: ")
-	var email string = readInput()
-
-	fmt.Print("enter password: ")
-	var password []uint8 = hashPassword(readInput())
-
-	user := &entity.User{
-		ID:       uint(len(userStorage) + 1),
-		Name:     name,
-		Email:    email,
-		Password: password,
-	}
-
-	userStorage = append(userStorage, user)
-
-	//writeToFile(*serializedData(*user), usersFile)
-
-	store.Save(user)
-
-	fmt.Printf("%s is registerd!\n", user.Email)
-}
-
 func serializedData(vStruct any) *[]byte {
 
 	var data, jErr = json.Marshal(vStruct)
@@ -324,17 +324,11 @@ func runCommand(command string) {
 		return
 	}
 
-	var uStore storage.UserStore
-	var userFileStore = &userStore{userFilePath: usersFile}
-	uStore = userFileStore
+	var uStore storage.Store[entity.User] = &userStore{userFilePath: usersFile}
 
-	var cStore storage.CategoryStore
-	var categoryFileStore = &categoryStore{categoryFilePath: categoriesFile}
-	cStore = categoryFileStore
+	var cStore storage.Store[entity.Category] = &categoryStore{categoryFilePath: categoriesFile}
 
-	var tStore storage.TaskStore
-	var taskFileStore = &taskStore{taskFilePath: tasksFile}
-	tStore = taskFileStore
+	var tStore storage.Store[entity.Task] = &taskStore{taskFilePath: tasksFile}
 
 	switch command {
 	case "login":
