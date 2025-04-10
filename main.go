@@ -3,15 +3,14 @@ package main
 import (
 	"bufio"
 	"crypto/sha256"
-	"encoding/json"
 	"flag"
 	"fmt"
+	"gocasts.ir/go-fundamentals/todo-cli/constant"
+	"gocasts.ir/go-fundamentals/todo-cli/contract"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
-	"gocasts.ir/go-fundamentals/todo-cli/storage"
-	"io"
+	"gocasts.ir/go-fundamentals/todo-cli/filestore"
 	"os"
 	"strconv"
-	"strings"
 )
 
 var (
@@ -24,22 +23,15 @@ var (
 	scanner *bufio.Scanner
 )
 
-const (
-	usersFile      = "users.txt"
-	tasksFile      = "tasks.txt"
-	categoriesFile = "categories.txt"
-	permFile       = 0777
-)
-
 func init() {
 
 	scanner = bufio.NewScanner(os.Stdin)
 
 	func() {
 
-		fUsers, _ := os.OpenFile(usersFile, os.O_CREATE, permFile)
-		fTasks, _ := os.OpenFile(tasksFile, os.O_CREATE, permFile)
-		fCategories, _ := os.OpenFile(categoriesFile, os.O_CREATE, permFile)
+		fUsers, _ := os.OpenFile(constant.UsersFile, os.O_CREATE, constant.PermFile)
+		fTasks, _ := os.OpenFile(constant.TasksFile, os.O_CREATE, constant.PermFile)
+		fCategories, _ := os.OpenFile(constant.CategoriesFile, os.O_CREATE, constant.PermFile)
 
 		_ = fUsers.Close()
 		_ = fTasks.Close()
@@ -47,112 +39,17 @@ func init() {
 	}()
 
 	// load data from storage
-	var userStore = &FileStore[entity.User]{FilePath: usersFile, PermFile: permFile}
+	var userStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile, PermFile: constant.PermFile}
 	userStorage = userStore.Load(new(entity.User))
 
-	var taskStore = &FileStore[entity.Task]{FilePath: tasksFile, PermFile: permFile}
+	var taskStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile, PermFile: constant.PermFile}
 	tasks = taskStore.Load(new(entity.Task))
 
-	var categoryStore = &FileStore[entity.Category]{FilePath: categoriesFile, PermFile: permFile}
+	var categoryStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile, PermFile: constant.PermFile}
 	categories = categoryStore.Load(new(entity.Category))
 }
 
-//
-//type userStore struct {
-//	userFilePath string
-//}
-//
-//func (f *userStore) Save(user *entity.User) {
-//	writeToFile(*serializedData(user), f.userFilePath)
-//}
-//
-//type taskStore struct {
-//	taskFilePath string
-//}
-//
-//func (f *taskStore) Save(task *entity.Task) {
-//	writeToFile(*serializedData(*task), f.taskFilePath)
-//}
-//
-//type categoryStore struct {
-//	categoryFilePath string
-//}
-//
-//func (f *categoryStore) Save(category *entity.Category) {
-//	writeToFile(*serializedData(*category), f.categoryFilePath)
-//}
-
-type FileStore[T any] struct {
-	FilePath string
-	PermFile int
-}
-
-func (fs *FileStore[T]) Save(t *T) {
-	fs.writeToFile(*serializedData(*t))
-}
-
-func (fs *FileStore[T]) Load(t *T) []*T {
-	dataByte := fs.readFile()
-	dataStr := strings.Split(string(dataByte), "\n")
-	var objects []*T = nil
-	var object *T = new(T)
-
-	for _, obj := range dataStr {
-		if obj == "" {
-			continue
-		}
-		if err := json.Unmarshal([]byte(obj), object); err != nil {
-			panic(err)
-		}
-		objects = append(objects, object)
-		object = new(T)
-	}
-
-	return objects
-}
-
-func (fs *FileStore[T]) writeToFile(object []byte) {
-
-	// create object of file
-	file, _ := os.OpenFile(fs.FilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(fs.PermFile))
-
-	// defer file close
-	defer func(f *os.File) {
-		cErr := f.Close()
-		if cErr != nil {
-			panic(cErr)
-		}
-	}(file)
-
-	object = append(object, '\n')
-
-	func(f *os.File) {
-		_, wErr := file.Write(object)
-		if wErr != nil {
-			panic(wErr)
-		}
-	}(file)
-}
-
-func (fs *FileStore[T]) readFile() []byte {
-	file, _ := os.OpenFile(fs.FilePath, os.O_RDONLY, os.FileMode(fs.PermFile))
-
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(file)
-
-	bs, rErr := io.ReadAll(file)
-	if rErr != nil {
-		panic(rErr)
-	}
-
-	return bs
-}
-
-func registeredUser(store storage.Store[entity.User]) {
+func registeredUser(store contract.Store[entity.User]) {
 
 	fmt.Print("register user!\n")
 
@@ -179,7 +76,7 @@ func registeredUser(store storage.Store[entity.User]) {
 	fmt.Printf("%s is registerd!\n", user.Email)
 }
 
-func newCategory(store storage.Store[entity.Category]) uint {
+func newCategory(store contract.Store[entity.Category]) uint {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -204,7 +101,7 @@ func newCategory(store storage.Store[entity.Category]) uint {
 	return cId
 }
 
-func newTask(store storage.Store[entity.Task]) {
+func newTask(store contract.Store[entity.Task]) {
 
 	fmt.Print("enter title: ")
 	var title string = readInput()
@@ -285,17 +182,6 @@ func login() {
 	}
 }
 
-func serializedData(vStruct any) *[]byte {
-
-	var data, jErr = json.Marshal(vStruct)
-	if jErr != nil {
-		fmt.Printf("can't marshal user struct to json %v\n", jErr)
-		return nil
-	}
-
-	return &data
-}
-
 func hashPassword(password string) []uint8 {
 
 	h := sha256.New()
@@ -312,9 +198,9 @@ func runCommand(command string) {
 		return
 	}
 
-	var uStore = &FileStore[entity.User]{FilePath: usersFile}
-	var cStore = &FileStore[entity.Category]{FilePath: categoriesFile}
-	var tStore = &FileStore[entity.Task]{FilePath: tasksFile}
+	var uStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile}
+	var cStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile}
+	var tStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile}
 
 	switch command {
 	case "login":
