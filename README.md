@@ -1,4 +1,20 @@
-Entities
+# Todo-cli App
+
+A practice project implementing a simple todo app while attending the [gocasts](https://github.com/gocasts-bootcamp) bootcamp course to get acquainted with golang
+
+## Usage
+
+```bash
+# build project
+go build -o todo-cli
+
+# show help project
+./todo-cli -h
+
+# 
+./todo-cli --command [login | register-user | new-task| new-category | list-task | tasks-date | exit]
+```
+## Entities
 
 Category
 
@@ -34,7 +50,7 @@ User
         Register a user
         Log in user
 
-Use Cases
+## Use Cases
 
     User should be registered [*]
     User should be able to log in to the application [*]
