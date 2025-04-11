@@ -51,18 +51,13 @@ func registeredUser(store contract.Store[entity.User]) {
 	fmt.Print("enter password: ")
 	var password []uint8 = hashPassword(readInput())
 
-	user := &entity.User{
-		ID:       uint(len(userStorage) + 1),
-		Name:     name,
-		Email:    email,
-		Password: password,
-	}
+	user := entity.NewUser(uint(len(userStorage)+1), name, email, password)
 
 	userStorage = append(userStorage, user)
 
 	store.Save(user)
 
-	fmt.Printf("%s is registerd!\n", user.Email)
+	fmt.Printf("%s is registerd!\n", user.GetEmail())
 }
 
 func newCategory(store contract.Store[entity.Category]) uint {
@@ -74,18 +69,13 @@ func newCategory(store contract.Store[entity.Category]) uint {
 	var color string = readInput()
 
 	cId := uint(len(categories) + 1)
-	c := &entity.Category{
-		ID:     cId,
-		Title:  title,
-		Color:  color,
-		UserId: authenticatedUser.ID,
-	}
+	c := entity.NewCategory(cId, title, color, authenticatedUser.GetId())
 
 	categories = append(categories, c)
 
 	store.Save(c)
 
-	fmt.Printf("category [%s] is create!\n", c.Title)
+	fmt.Printf("category [%s] is create!\n", c.GetTitle())
 
 	return cId
 }
@@ -101,24 +91,18 @@ func newTask(store contract.Store[entity.Task]) {
 	fmt.Print("enter category: ")
 	var category, _ = strconv.Atoi(readInput())
 
-	t := &entity.Task{
-		Title:    title,
-		DueDate:  dueDate,
-		Category: uint(category),
-		IsDone:   false,
-		UserId:   authenticatedUser.ID,
-	}
+	t := entity.NewTask(uint(len(tasks))+1, title, dueDate, uint(category), authenticatedUser.GetId())
 	tasks = append(tasks, t)
 
 	store.Save(t)
 
-	fmt.Printf("task [%s] is create!\n", t.Title)
+	fmt.Printf("task [%s] is create!\n", t.GetTitle())
 }
 
 func listTask() []*entity.Task {
 
 	for _, task := range tasks {
-		if task.UserId == authenticatedUser.ID {
+		if task.GetUserId() == authenticatedUser.GetId() {
 			userTasks = append(userTasks, task)
 		}
 	}
@@ -137,7 +121,7 @@ func tasksByDate() []*entity.Task {
 
 	var tbd []*entity.Task
 	for _, task := range userTasks {
-		if task.DueDate == date {
+		if task.GetDueDate() == date {
 			tbd = append(tbd, task)
 		}
 	}
@@ -157,10 +141,10 @@ func login() {
 	hPass := hashPassword(password)
 
 	for _, user := range userStorage {
-		if user.Email == email && string(user.Password) == string(hPass) {
+		if user.GetEmail() == email && string(user.GetPassword()) == string(hPass) {
 			authenticatedUser = user
 
-			fmt.Printf("welcome %s\n", user.Email)
+			fmt.Printf("welcome %s\n", user.GetEmail())
 
 			break
 		}
@@ -226,13 +210,13 @@ func main() {
 	flag.Parse()
 
 	// load data from storage
-	var userStore = &filestore.FileStore[entity.User]{FilePath: constant.UsersFile, PermFile: constant.PermFile}
+	var userStore = filestore.NewStore[entity.User](constant.UsersFile, constant.PermFile)
 	userStorage = append(userStorage, userStore.Load(new(entity.User))...)
 
-	var taskStore = &filestore.FileStore[entity.Task]{FilePath: constant.TasksFile, PermFile: constant.PermFile}
+	var taskStore = filestore.NewStore[entity.Task](constant.TasksFile, constant.PermFile)
 	tasks = append(tasks, taskStore.Load(new(entity.Task))...)
 
-	var categoryStore = &filestore.FileStore[entity.Category]{FilePath: constant.CategoriesFile, PermFile: constant.PermFile}
+	var categoryStore = filestore.NewStore[entity.Category](constant.CategoriesFile, constant.PermFile)
 	categories = append(categories, categoryStore.Load(new(entity.Category))...)
 
 	for {

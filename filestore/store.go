@@ -8,18 +8,46 @@ import (
 	"strings"
 )
 
-type FileStore[T any] struct {
-	FilePath string
-	PermFile int
+type Store[T interface{}] struct {
+	filePath string
+	permFile os.FileMode
 }
 
-func (fs *FileStore[T]) Save(t *T) {
-	fs.writeToFile(*fs.serializedData(t))
+// NewStore constructor method
+func NewStore[T any](filePath string, permFile os.FileMode) *Store[T] {
+	return &Store[T]{
+		filePath: filePath,
+		permFile: permFile,
+	}
 }
 
-func (fs *FileStore[T]) Load(*T) []*T {
+// GetFilePath Getter method
+func (s *Store[T]) GetFilePath() string {
+	return s.filePath
+}
 
-	dataByte := fs.readFile()
+// GetPermFile Getter method
+func (s *Store[T]) GetPermFile() os.FileMode {
+	return s.permFile
+}
+
+// SetFilePath Setter method
+func (s *Store[T]) SetFilePath(path string) {
+	s.filePath = path
+}
+
+// SetPermFile Setter method
+func (s *Store[T]) SetPermFile(perm os.FileMode) {
+	s.permFile = perm
+}
+
+func (s *Store[T]) Save(t *T) {
+	s.writeToFile(*s.serializedData(t))
+}
+
+func (s *Store[T]) Load(*T) []*T {
+
+	dataByte := s.readFile()
 	dataStr := strings.Split(string(dataByte), "\n")
 	var objects []*T = nil
 	object := new(T)
@@ -43,10 +71,10 @@ func (fs *FileStore[T]) Load(*T) []*T {
 	return objects
 }
 
-func (fs *FileStore[T]) writeToFile(object []byte) {
+func (s *Store[T]) writeToFile(object []byte) {
 
 	// create object of file
-	file, _ := os.OpenFile(fs.FilePath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.FileMode(fs.PermFile))
+	file, _ := os.OpenFile(s.GetFilePath(), os.O_CREATE|os.O_APPEND|os.O_RDWR, s.GetPermFile())
 
 	// defer file close
 	defer func(f *os.File) {
@@ -66,8 +94,8 @@ func (fs *FileStore[T]) writeToFile(object []byte) {
 	}(file)
 }
 
-func (fs *FileStore[T]) readFile() []byte {
-	file, _ := os.OpenFile(fs.FilePath, os.O_RDONLY, os.FileMode(fs.PermFile))
+func (s *Store[T]) readFile() []byte {
+	file, _ := os.OpenFile(s.GetFilePath(), os.O_RDONLY, s.GetPermFile())
 
 	defer func(f *os.File) {
 		err := f.Close()
@@ -84,7 +112,7 @@ func (fs *FileStore[T]) readFile() []byte {
 	return bs
 }
 
-func (fs *FileStore[T]) serializedData(t *T) *[]byte {
+func (s *Store[T]) serializedData(t *T) *[]byte {
 
 	var data, jErr = json.Marshal(t)
 	if jErr != nil {
