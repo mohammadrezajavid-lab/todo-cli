@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -41,5 +42,18 @@ func (u *User) GetName() string {
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("ID: %d, Email: %s, Name: %s", u.GetId(), u.GetEmail(), u.GetName())
+	return fmt.Sprintf("ID: %d, Email: %s, Name: %s",
+		u.GetId(),
+		u.GetEmail(),
+		u.GetName(),
+	)
+}
+
+func (u *User) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"id":       u.GetId(),
+		"name":     u.GetName(),
+		"email":    u.GetEmail(),
+		"password": u.GetPassword(),
+	})
 }

@@ -1,6 +1,9 @@
 package entity
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Task struct {
 	id         uint
@@ -63,5 +66,21 @@ func (t *Task) SetDueDate(dueDate string) {
 }
 
 func (t *Task) String() string {
-	return fmt.Sprintf("ID: %d, Title: %s, DueDate: %s, IsDone: %v", t.id, t.title, t.dueDate, t.isDone)
+	return fmt.Sprintf("ID: %d, Title: %s, DueDate: %s, IsDone: %v",
+		t.id,
+		t.title,
+		t.dueDate,
+		t.isDone,
+	)
+}
+
+func (t *Task) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"id":         t.GetUserId(),
+		"title":      t.GetTitle(),
+		"dueDate":    t.GetDueDate(),
+		"categoryId": t.GetCategoryId(),
+		"isDone":     t.GetIsDone(),
+		"userId":     t.GetUserId(),
+	})
 }

@@ -134,11 +134,6 @@ func (s *Store[T]) serializedData(t *T) []byte {
 
 	var data, jErr = json.Marshal(t)
 
-	//fmt.Println("================================")
-	//fmt.Println("after marshaling data: ")
-	//fmt.Println(data)
-	//fmt.Println("================================")
-
 	if jErr != nil {
 		fmt.Printf("can't marshal user struct to json %v\n", jErr)
 		return nil

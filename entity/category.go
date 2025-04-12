@@ -1,5 +1,10 @@
 package entity
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type Category struct {
 	id     uint
 	title  string
@@ -44,4 +49,22 @@ func (c *Category) SetTitle(title string) {
 // SetColor Setter method
 func (c *Category) SetColor(color string) {
 	c.color = color
+}
+
+func (c *Category) String() string {
+	return fmt.Sprintf("Id: %d, Title: %s, Color: %s, UserId: %d",
+		c.GetId(),
+		c.GetTitle(),
+		c.GetColor(),
+		c.GetUserId(),
+	)
+}
+
+func (c *Category) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"id":     c.GetId(),
+		"title":  c.GetTitle(),
+		"color":  c.GetColor(),
+		"userId": c.GetUserId(),
+	})
 }
