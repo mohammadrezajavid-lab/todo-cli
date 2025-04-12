@@ -14,10 +14,10 @@ import (
 
 var (
 	authenticatedUser *entity.User
-	userTasks         []*entity.Task
-	userStorage       []*entity.User
-	categories        []*entity.Category
-	tasks             []*entity.Task
+	//userTasks         []*entity.Task
+	//userStorage []*entity.User
+	//categories  []*entity.Category
+	//tasks       []*entity.Task
 )
 
 func init() {
@@ -46,9 +46,9 @@ func registeredUser(store contract.Store[entity.User]) {
 	fmt.Print("enter password: ")
 	var password []uint8 = pkg.HashPassword(pkg.ReadInput())
 
-	user := entity.NewUser(uint(len(userStorage)+1), name, email, password)
+	user := entity.NewUser(uint(len(store.GetObjectsStore())+1), name, email, password)
 
-	userStorage = append(userStorage, user)
+	store.SetObjectsStore(append(store.GetObjectsStore(), user))
 
 	store.Save(user)
 
@@ -63,10 +63,10 @@ func newCategory(store contract.Store[entity.Category]) uint {
 	fmt.Print("enter color: ")
 	var color string = pkg.ReadInput()
 
-	cId := uint(len(categories) + 1)
+	cId := uint(len(store.GetObjectsStore()) + 1)
 	c := entity.NewCategory(cId, title, color, authenticatedUser.GetId())
 
-	categories = append(categories, c)
+	store.SetObjectsStore(append(store.GetObjectsStore(), c))
 
 	store.Save(c)
 
@@ -86,45 +86,43 @@ func newTask(store contract.Store[entity.Task]) {
 	fmt.Print("enter category: ")
 	var category, _ = strconv.Atoi(pkg.ReadInput())
 
-	t := entity.NewTask(uint(len(tasks))+1, title, dueDate, uint(category), authenticatedUser.GetId())
-	tasks = append(tasks, t)
+	t := entity.NewTask(uint(len(store.GetObjectsStore()))+1, title, dueDate, uint(category), authenticatedUser.GetId())
+	store.SetObjectsStore(append(store.GetObjectsStore(), t))
 
 	store.Save(t)
 
 	fmt.Printf("task [%s] is create!\n", t.GetTitle())
 }
 
-func listTask() []*entity.Task {
+func listTask(store contract.Store[entity.Task]) []*entity.Task {
+	ut := make([]*entity.Task, 0)
 
-	for _, task := range tasks {
+	for _, task := range store.GetObjectsStore() {
 		if task.GetUserId() == authenticatedUser.GetId() {
-			userTasks = append(userTasks, task)
+			ut = append(ut, task)
 		}
 	}
 
-	return userTasks
+	return ut
 }
 
-func tasksByDate() []*entity.Task {
+func tasksByDate(store contract.Store[entity.Task]) []*entity.Task {
 
 	fmt.Print("enter date: ")
 	var date string = pkg.ReadInput()
 
-	if userTasks == nil {
-		listTask()
-	}
+	var tbd = make([]*entity.Task, 0)
 
-	var tbd []*entity.Task
-	for _, task := range userTasks {
-		if task.GetDueDate() == date {
-			tbd = append(tbd, task)
+	for _, t := range store.GetObjectsStore() {
+		if t.GetDueDate() == date && t.GetUserId() == authenticatedUser.GetId() {
+			tbd = append(tbd, t)
 		}
 	}
 
 	return tbd
 }
 
-func login() {
+func login(store contract.Store[entity.User]) {
 
 	fmt.Println("login process...")
 
@@ -135,7 +133,7 @@ func login() {
 	var password string = pkg.ReadInput()
 	hPass := pkg.HashPassword(password)
 
-	for _, user := range userStorage {
+	for _, user := range store.GetObjectsStore() {
 		if user.GetEmail() == email && string(user.GetPassword()) == string(hPass) {
 			authenticatedUser = user
 
@@ -153,14 +151,13 @@ func login() {
 func runCommand(command string, uStore contract.Store[entity.User], tStore contract.Store[entity.Task], cStore contract.Store[entity.Category]) {
 
 	if command != "login" && command != "register-user" && command != "exit" && authenticatedUser == nil {
-		login()
+		login(uStore)
 
 		return
 	}
-
 	switch command {
 	case "login":
-		login()
+		login(uStore)
 	case "register-user":
 		registeredUser(uStore)
 	case "new-category":
@@ -168,9 +165,9 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 	case "new-task":
 		newTask(tStore)
 	case "list-task":
-		printTasks(listTask())
+		printTasks(listTask(tStore))
 	case "tasks-date":
-		fmt.Println(tasksByDate())
+		fmt.Println(tasksByDate(tStore))
 	case "exit":
 		os.Exit(0)
 	default:
@@ -192,13 +189,13 @@ func main() {
 
 	// load data from storage
 	var userStore = filestore.NewStore[entity.User](constant.UsersFile, constant.PermFile)
-	userStorage = append(userStorage, userStore.Load(new(entity.User))...)
+	userStore.SetObjectsStore(append(userStore.GetObjectsStore(), userStore.Load(new(entity.User))...))
 
 	var taskStore = filestore.NewStore[entity.Task](constant.TasksFile, constant.PermFile)
-	tasks = append(tasks, taskStore.Load(new(entity.Task))...)
+	taskStore.SetObjectsStore(append(taskStore.GetObjectsStore(), taskStore.Load(new(entity.Task))...))
 
 	var categoryStore = filestore.NewStore[entity.Category](constant.CategoriesFile, constant.PermFile)
-	categories = append(categories, categoryStore.Load(new(entity.Category))...)
+	categoryStore.SetObjectsStore(append(categoryStore.GetObjectsStore(), categoryStore.Load(new(entity.Category))...))
 
 	for {
 		runCommand(command, userStore, taskStore, categoryStore)

@@ -9,40 +9,13 @@ import (
 )
 
 type Store[T interface{}] struct {
-	filePath string
-	permFile os.FileMode
-}
-
-// NewStore constructor method
-func NewStore[T any](filePath string, permFile os.FileMode) *Store[T] {
-	return &Store[T]{
-		filePath: filePath,
-		permFile: permFile,
-	}
-}
-
-// GetFilePath Getter method
-func (s *Store[T]) GetFilePath() string {
-	return s.filePath
-}
-
-// GetPermFile Getter method
-func (s *Store[T]) GetPermFile() os.FileMode {
-	return s.permFile
-}
-
-// SetFilePath Setter method
-func (s *Store[T]) SetFilePath(path string) {
-	s.filePath = path
-}
-
-// SetPermFile Setter method
-func (s *Store[T]) SetPermFile(perm os.FileMode) {
-	s.permFile = perm
+	filePath    string
+	permFile    os.FileMode
+	entityStore []*T
 }
 
 func (s *Store[T]) Save(t *T) {
-	s.writeToFile(*s.serializedData(t))
+	s.writeToFile(s.serializedData(t))
 }
 
 func (s *Store[T]) Load(*T) []*T {
@@ -68,10 +41,55 @@ func (s *Store[T]) Load(*T) []*T {
 		object = new(T)
 	}
 
+	for _, obj := range objects {
+		fmt.Println(obj)
+	}
+
 	return objects
 }
 
+// GetObjectsStore Getter method
+func (s *Store[T]) GetObjectsStore() []*T {
+	return s.entityStore
+}
+
+// SetObjectsStore Getter method
+func (s *Store[T]) SetObjectsStore(entityStore []*T) {
+	s.entityStore = entityStore
+}
+
+// NewStore constructor method
+func NewStore[T any](filePath string, permFile os.FileMode) *Store[T] {
+	return &Store[T]{
+		filePath:    filePath,
+		permFile:    permFile,
+		entityStore: make([]*T, 0),
+	}
+}
+
+// GetFilePath Getter method
+func (s *Store[T]) GetFilePath() string {
+	return s.filePath
+}
+
+// GetPermFile Getter method
+func (s *Store[T]) GetPermFile() os.FileMode {
+	return s.permFile
+}
+
+// SetFilePath Setter method
+func (s *Store[T]) SetFilePath(path string) {
+	s.filePath = path
+}
+
+// SetPermFile Setter method
+func (s *Store[T]) SetPermFile(perm os.FileMode) {
+	s.permFile = perm
+}
+
 func (s *Store[T]) writeToFile(object []byte) {
+
+	fmt.Println("object write to file: " + string(object))
 
 	// create object of file
 	file, _ := os.OpenFile(s.GetFilePath(), os.O_CREATE|os.O_APPEND|os.O_RDWR, s.GetPermFile())
@@ -112,13 +130,19 @@ func (s *Store[T]) readFile() []byte {
 	return bs
 }
 
-func (s *Store[T]) serializedData(t *T) *[]byte {
+func (s *Store[T]) serializedData(t *T) []byte {
 
 	var data, jErr = json.Marshal(t)
+
+	//fmt.Println("================================")
+	//fmt.Println("after marshaling data: ")
+	//fmt.Println(data)
+	//fmt.Println("================================")
+
 	if jErr != nil {
 		fmt.Printf("can't marshal user struct to json %v\n", jErr)
 		return nil
 	}
 
-	return &data
+	return data
 }
