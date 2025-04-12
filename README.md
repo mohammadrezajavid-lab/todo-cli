@@ -12,7 +12,7 @@ go build -o todo-cli
 ./todo-cli -h
 
 # 
-./todo-cli --command [login | register-user | new-task| new-category | list-task | tasks-date | exit]
+./todo-cli --command [login | register-user | new-task| new-category | list-task | list-category | tasks-date | exit]
 ```
 ## Entities
 

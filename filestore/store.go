@@ -89,8 +89,6 @@ func (s *Store[T]) SetPermFile(perm os.FileMode) {
 
 func (s *Store[T]) writeToFile(object []byte) {
 
-	fmt.Println("object write to file: " + string(object))
-
 	// create object of file
 	file, _ := os.OpenFile(s.GetFilePath(), os.O_CREATE|os.O_APPEND|os.O_RDWR, s.GetPermFile())
 

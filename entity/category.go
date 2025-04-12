@@ -52,7 +52,7 @@ func (c *Category) SetColor(color string) {
 }
 
 func (c *Category) String() string {
-	return fmt.Sprintf("Id: %d, Title: %s, Color: %s, UserId: %d",
+	return fmt.Sprintf("Id: %d, Title: %s, Color: %s, UserId: %d\n",
 		c.GetId(),
 		c.GetTitle(),
 		c.GetColor(),

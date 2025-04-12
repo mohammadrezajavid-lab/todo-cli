@@ -42,7 +42,7 @@ func (u *User) GetName() string {
 }
 
 func (u *User) String() string {
-	return fmt.Sprintf("ID: %d, Email: %s, Name: %s",
+	return fmt.Sprintf("ID: %d, Email: %s, Name: %s\n",
 		u.GetId(),
 		u.GetEmail(),
 		u.GetName(),

@@ -66,7 +66,7 @@ func (t *Task) SetDueDate(dueDate string) {
 }
 
 func (t *Task) String() string {
-	return fmt.Sprintf("ID: %d, Title: %s, DueDate: %s, IsDone: %v",
+	return fmt.Sprintf("ID: %d, Title: %s, DueDate: %s, IsDone: %v\n",
 		t.id,
 		t.title,
 		t.dueDate,

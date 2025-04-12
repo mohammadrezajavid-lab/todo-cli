@@ -106,6 +106,18 @@ func listTask(store contract.Store[entity.Task]) []*entity.Task {
 	return ut
 }
 
+func listCategory(store contract.Store[entity.Category]) []*entity.Category {
+	uc := make([]*entity.Category, 0)
+
+	for _, cat := range store.GetObjectsStore() {
+		if cat.GetUserId() == authenticatedUser.GetId() {
+			uc = append(uc, cat)
+		}
+	}
+
+	return uc
+}
+
 func tasksByDate(store contract.Store[entity.Task]) []*entity.Task {
 
 	fmt.Print("enter date: ")
@@ -165,7 +177,9 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 	case "new-task":
 		newTask(tStore)
 	case "list-task":
-		printTasks(listTask(tStore))
+		PrintObjects[entity.Task](listTask(tStore))
+	case "list-category":
+		PrintObjects[entity.Category](listCategory(cStore))
 	case "tasks-date":
 		fmt.Println(tasksByDate(tStore))
 	case "exit":
@@ -175,9 +189,9 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 	}
 }
 
-func printTasks(tasks []*entity.Task) {
-	for _, t := range tasks {
-		fmt.Print(t.String())
+func PrintObjects[T any](objects []*T) {
+	for _, t := range objects {
+		fmt.Print(t)
 	}
 }
 
