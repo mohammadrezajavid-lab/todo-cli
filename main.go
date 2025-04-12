@@ -1,14 +1,13 @@
 package main
 
 import (
-	"bufio"
-	"crypto/sha256"
 	"flag"
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/contract"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
 	"gocasts.ir/go-fundamentals/todo-cli/filestore"
+	"gocasts.ir/go-fundamentals/todo-cli/pkg"
 	"os"
 	"strconv"
 )
@@ -19,13 +18,9 @@ var (
 	userStorage       []*entity.User
 	categories        []*entity.Category
 	tasks             []*entity.Task
-
-	scanner *bufio.Scanner
 )
 
 func init() {
-
-	scanner = bufio.NewScanner(os.Stdin)
 
 	func() {
 		fUsers, _ := os.OpenFile(constant.UsersFile, os.O_CREATE, constant.PermFile)
@@ -43,13 +38,13 @@ func registeredUser(store contract.Store[entity.User]) {
 	fmt.Print("register user!\n")
 
 	fmt.Print("enter name: ")
-	var name string = readInput()
+	var name string = pkg.ReadInput()
 
 	fmt.Print("enter email: ")
-	var email string = readInput()
+	var email string = pkg.ReadInput()
 
 	fmt.Print("enter password: ")
-	var password []uint8 = hashPassword(readInput())
+	var password []uint8 = pkg.HashPassword(pkg.ReadInput())
 
 	user := entity.NewUser(uint(len(userStorage)+1), name, email, password)
 
@@ -63,10 +58,10 @@ func registeredUser(store contract.Store[entity.User]) {
 func newCategory(store contract.Store[entity.Category]) uint {
 
 	fmt.Print("enter title: ")
-	var title string = readInput()
+	var title string = pkg.ReadInput()
 
 	fmt.Print("enter color: ")
-	var color string = readInput()
+	var color string = pkg.ReadInput()
 
 	cId := uint(len(categories) + 1)
 	c := entity.NewCategory(cId, title, color, authenticatedUser.GetId())
@@ -83,13 +78,13 @@ func newCategory(store contract.Store[entity.Category]) uint {
 func newTask(store contract.Store[entity.Task]) {
 
 	fmt.Print("enter title: ")
-	var title string = readInput()
+	var title string = pkg.ReadInput()
 
 	fmt.Print("enter due date: ")
-	var dueDate string = readInput()
+	var dueDate string = pkg.ReadInput()
 
 	fmt.Print("enter category: ")
-	var category, _ = strconv.Atoi(readInput())
+	var category, _ = strconv.Atoi(pkg.ReadInput())
 
 	t := entity.NewTask(uint(len(tasks))+1, title, dueDate, uint(category), authenticatedUser.GetId())
 	tasks = append(tasks, t)
@@ -113,7 +108,7 @@ func listTask() []*entity.Task {
 func tasksByDate() []*entity.Task {
 
 	fmt.Print("enter date: ")
-	var date string = readInput()
+	var date string = pkg.ReadInput()
 
 	if userTasks == nil {
 		listTask()
@@ -134,11 +129,11 @@ func login() {
 	fmt.Println("login process...")
 
 	fmt.Print("enter email: ")
-	var email string = readInput()
+	var email string = pkg.ReadInput()
 
 	fmt.Print("enter password: ")
-	var password string = readInput()
-	hPass := hashPassword(password)
+	var password string = pkg.ReadInput()
+	hPass := pkg.HashPassword(password)
 
 	for _, user := range userStorage {
 		if user.GetEmail() == email && string(user.GetPassword()) == string(hPass) {
@@ -153,14 +148,6 @@ func login() {
 	if authenticatedUser == nil {
 		fmt.Print("invalid email or password!\n")
 	}
-}
-
-func hashPassword(password string) []uint8 {
-
-	h := sha256.New()
-	h.Write([]byte(password))
-	bs := h.Sum(nil)
-	return bs
 }
 
 func runCommand(command string, uStore contract.Store[entity.User], tStore contract.Store[entity.Task], cStore contract.Store[entity.Category]) {
@@ -197,12 +184,6 @@ func printTasks(tasks []*entity.Task) {
 	}
 }
 
-func readInput() string {
-	scanner.Scan()
-
-	return scanner.Text()
-}
-
 func main() {
 
 	var command string
@@ -223,7 +204,7 @@ func main() {
 		runCommand(command, userStore, taskStore, categoryStore)
 
 		fmt.Print("please enter another command: ")
-		command = readInput()
+		command = pkg.ReadInput()
 	}
 }
 

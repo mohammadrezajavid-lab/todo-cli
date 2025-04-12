@@ -1,8 +1,8 @@
 package constant
 
 const (
-	UsersFile      = "users.txt"
-	TasksFile      = "tasks.txt"
-	CategoriesFile = "categories.txt"
+	UsersFile      = "users.json"
+	TasksFile      = "tasks.json"
+	CategoriesFile = "categories.json"
 	PermFile       = 0777
 )
