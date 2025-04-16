@@ -111,6 +111,7 @@ func (s *Store[T]) writeToFile(object []byte) {
 }
 
 func (s *Store[T]) readFile() []byte {
+
 	file, _ := os.OpenFile(s.GetFilePath(), os.O_RDONLY, s.GetPermFile())
 
 	defer func(f *os.File) {

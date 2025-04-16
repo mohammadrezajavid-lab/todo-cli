@@ -12,13 +12,7 @@ import (
 	"strconv"
 )
 
-var (
-	authenticatedUser *entity.User
-	//userTasks         []*entity.Task
-	//userStorage []*entity.User
-	//categories  []*entity.Category
-	//tasks       []*entity.Task
-)
+var authenticatedUser *entity.User
 
 func init() {
 
@@ -190,8 +184,8 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 }
 
 func PrintObjects[T any](objects []*T) {
-	for _, t := range objects {
-		fmt.Print(t)
+	for _, obj := range objects {
+		fmt.Print(obj)
 	}
 }
 
