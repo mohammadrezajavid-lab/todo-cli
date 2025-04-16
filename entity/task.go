@@ -55,6 +55,11 @@ func (t *Task) GetUserId() uint {
 	return t.userId
 }
 
+// SetUserId Setter method
+func (t *Task) SetUserId(userId uint) {
+	t.userId = userId
+}
+
 // SetIsDone Setter method
 func (t *Task) SetIsDone(isDone bool) {
 	t.isDone = isDone

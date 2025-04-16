@@ -3,3 +3,5 @@
 *.exe
 *.iml
 *.json
+./service/server.go
+./client/client.go

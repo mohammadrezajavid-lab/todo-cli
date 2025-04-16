@@ -6,8 +6,10 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/contract"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
-	"gocasts.ir/go-fundamentals/todo-cli/filestore"
 	"gocasts.ir/go-fundamentals/todo-cli/pkg"
+	"gocasts.ir/go-fundamentals/todo-cli/repository/filestore"
+	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
+	"gocasts.ir/go-fundamentals/todo-cli/service/task"
 	"os"
 	"strconv"
 )
@@ -80,12 +82,12 @@ func newTask(store contract.Store[entity.Task]) {
 	fmt.Print("enter category: ")
 	var category, _ = strconv.Atoi(pkg.ReadInput())
 
-	t := entity.NewTask(uint(len(store.GetObjectsStore()))+1, title, dueDate, uint(category), authenticatedUser.GetId())
-	store.SetObjectsStore(append(store.GetObjectsStore(), t))
-
-	store.Save(t)
-
-	fmt.Printf("task [%s] is create!\n", t.GetTitle())
+	//t := entity.NewTask(uint(len(store.GetObjectsStore()))+1, title, dueDate, uint(category), authenticatedUser.GetId())
+	//store.SetObjectsStore(append(store.GetObjectsStore(), t))
+	//
+	//store.Save(t)
+	//
+	//fmt.Printf("task [%s] is create!\n", t.GetTitle())
 }
 
 func listTask(store contract.Store[entity.Task]) []*entity.Task {
@@ -191,6 +193,9 @@ func PrintObjects[T any](objects []*T) {
 
 func main() {
 
+	taskMemoryRepo := memoryStore.NewTaskMemory()
+	taskService := task.NewService(taskMemoryRepo)
+	
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")
 	flag.Parse()
