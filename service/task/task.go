@@ -35,6 +35,17 @@ type Request struct {
 	authenticatedUserId uint
 }
 
+func NewRequest(title string, dueDate string, categoryId uint, authenticatedUserId uint) *Request {
+	return &Request{
+		Task: struct {
+			title      string
+			dueDate    string
+			categoryId uint
+		}{title: title, dueDate: dueDate, categoryId: categoryId},
+		authenticatedUserId: authenticatedUserId,
+	}
+}
+
 func (req *Request) GetTitle() string {
 	return req.Task.title
 }
@@ -49,22 +60,25 @@ func (req *Request) GetAuthenticatedUserId() uint {
 }
 
 type Response struct {
-	*entity.Task
+	task *entity.Task
 }
 
 func NewCreateTaskResponse(task *entity.Task) *Response {
-	return &Response{task}
+	return &Response{task: task}
+}
+func (r *Response) GetTask() *entity.Task {
+	return r.task
 }
 
 func (s *Service) CreateTask(taskReq *Request) (*Response, error) {
 
-	var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.Task.categoryId, taskReq.authenticatedUserId)
-	if cErr != nil {
-		return nil, cErr
-	}
-	if !ok {
-		return nil, fmt.Errorf("user does not have this categoryId: %d", taskReq.Task.categoryId)
-	}
+	//var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.Task.categoryId, taskReq.authenticatedUserId)
+	//if cErr != nil {
+	//	return nil, cErr
+	//}
+	//if !ok {
+	//	return nil, fmt.Errorf("user does not have this categoryId: %d", taskReq.Task.categoryId)
+	//}
 
 	task, err := s.taskRepository.CreateNewTask(entity.NewTask(0, taskReq.GetTitle(), taskReq.GetDueDate(), taskReq.GetCategoryId(), taskReq.GetAuthenticatedUserId()))
 	if err != nil {
@@ -92,7 +106,9 @@ type ListResponse struct {
 func NewListResponse(tasks []*entity.Task) *ListResponse {
 	return &ListResponse{tasks: tasks}
 }
-
+func (lr *ListResponse) GetTasks() []*entity.Task {
+	return lr.tasks
+}
 func (s *Service) ListTask(listReq *ListRequest) (*ListResponse, error) {
 
 	tasks, err := s.taskRepository.ListUserTasks(listReq.GetUserId())

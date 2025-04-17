@@ -170,12 +170,12 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 		registeredUser(uStore)
 	case "new-category":
 		newCategory(cStore)
+	case "list-category":
+		PrintObjects[entity.Category](listCategory(cStore))
 	case "new-task":
 		newTask(tStore)
 	case "list-task":
 		PrintObjects[entity.Task](listTask(tStore))
-	case "list-category":
-		PrintObjects[entity.Category](listCategory(cStore))
 	case "tasks-date":
 		fmt.Println(tasksByDate(tStore))
 	case "exit":
@@ -193,10 +193,10 @@ func PrintObjects[T any](objects []*T) {
 
 func main() {
 
-	taskMemoryRepo := memoryStore.NewTaskMemory()
-	categoryMemoryRepo := memoryStore.NewCategoryMemory()
-
-	taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
+	//taskMemoryRepo := memoryStore.NewTaskMemory()
+	//categoryMemoryRepo := memoryStore.NewCategoryMemory()
+	//
+	//taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
 
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")
