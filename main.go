@@ -194,8 +194,10 @@ func PrintObjects[T any](objects []*T) {
 func main() {
 
 	taskMemoryRepo := memoryStore.NewTaskMemory()
-	taskService := task.NewService(taskMemoryRepo)
-	
+	categoryMemoryRepo := memoryStore.NewCategoryMemory()
+
+	taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
+
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")
 	flag.Parse()
