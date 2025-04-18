@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"gocasts.ir/go-fundamentals/todo-cli/service/task/taskparam"
 )
 
 type ServiceTaskRepository interface {
@@ -25,52 +26,7 @@ func NewService(taskRepository ServiceTaskRepository,
 	}
 }
 
-type Request struct {
-	Task struct {
-		title      string
-		dueDate    string
-		categoryId uint
-	}
-
-	authenticatedUserId uint
-}
-
-func NewRequest(title string, dueDate string, categoryId uint, authenticatedUserId uint) *Request {
-	return &Request{
-		Task: struct {
-			title      string
-			dueDate    string
-			categoryId uint
-		}{title: title, dueDate: dueDate, categoryId: categoryId},
-		authenticatedUserId: authenticatedUserId,
-	}
-}
-
-func (req *Request) GetTitle() string {
-	return req.Task.title
-}
-func (req *Request) GetDueDate() string {
-	return req.Task.dueDate
-}
-func (req *Request) GetCategoryId() uint {
-	return req.Task.categoryId
-}
-func (req *Request) GetAuthenticatedUserId() uint {
-	return req.authenticatedUserId
-}
-
-type Response struct {
-	task *entity.Task
-}
-
-func NewCreateTaskResponse(task *entity.Task) *Response {
-	return &Response{task: task}
-}
-func (r *Response) GetTask() *entity.Task {
-	return r.task
-}
-
-func (s *Service) CreateTask(taskReq *Request) (*Response, error) {
+func (s *Service) CreateTask(taskReq *taskparam.Request) (*taskparam.Response, error) {
 
 	//var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.Task.categoryId, taskReq.authenticatedUserId)
 	//if cErr != nil {
@@ -85,31 +41,10 @@ func (s *Service) CreateTask(taskReq *Request) (*Response, error) {
 		return nil, fmt.Errorf("can't create new task: %v", err)
 	}
 
-	return NewCreateTaskResponse(task), nil
+	return taskparam.NewCreateTaskResponse(task), nil
 }
 
-type ListRequest struct {
-	userId uint
-}
-
-func NewListRequest(userId uint) *ListRequest {
-	return &ListRequest{userId: userId}
-}
-func (lr *ListRequest) GetUserId() uint {
-	return lr.userId
-}
-
-type ListResponse struct {
-	tasks []*entity.Task
-}
-
-func NewListResponse(tasks []*entity.Task) *ListResponse {
-	return &ListResponse{tasks: tasks}
-}
-func (lr *ListResponse) GetTasks() []*entity.Task {
-	return lr.tasks
-}
-func (s *Service) ListTask(listReq *ListRequest) (*ListResponse, error) {
+func (s *Service) ListTask(listReq *taskparam.ListRequest) (*taskparam.ListResponse, error) {
 
 	tasks, err := s.taskRepository.ListUserTasks(listReq.GetUserId())
 
@@ -118,5 +53,5 @@ func (s *Service) ListTask(listReq *ListRequest) (*ListResponse, error) {
 		return nil, fmt.Errorf("can't list tasks %v", err)
 	}
 
-	return NewListResponse(tasks), nil
+	return taskparam.NewListResponse(tasks), nil
 }

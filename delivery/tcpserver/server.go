@@ -6,6 +6,7 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
 	"gocasts.ir/go-fundamentals/todo-cli/service/task"
+	"gocasts.ir/go-fundamentals/todo-cli/service/task/taskparam"
 	"log"
 	"net"
 )
@@ -81,7 +82,7 @@ func runCommand(connection net.Conn, request *deliveryparam.Request) {
 	switch request.GetCommand() {
 	case "create-task":
 
-		responseCreatedTask, cErr := taskService.CreateTask(task.NewRequest("title", "dueDate", 0, 0))
+		responseCreatedTask, cErr := taskService.CreateTask(taskparam.NewRequest("title", "dueDate", 0, 0))
 		if cErr != nil {
 			if _, wErr := connection.Write([]byte(cErr.Error())); wErr != nil {
 				log.Println("can't write data to connection", wErr)
@@ -105,7 +106,7 @@ func runCommand(connection net.Conn, request *deliveryparam.Request) {
 			//continue
 		}
 	case "list-task":
-		responseListTask, lErr := taskService.ListTask(task.NewListRequest(1999))
+		responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(1999))
 		if lErr != nil {
 			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
 				log.Println("can't write data to connection", wErr)
