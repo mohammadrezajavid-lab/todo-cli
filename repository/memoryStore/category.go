@@ -12,9 +12,11 @@ type CategoryMemory struct {
 func NewCategoryMemory() *CategoryMemory {
 	return &CategoryMemory{make([]*entity.Category, 0)}
 }
+
 func (cm *CategoryMemory) GetCategories() []*entity.Category {
 	return cm.categories
 }
+
 func (cm *CategoryMemory) SetCategories(categories []*entity.Category) {
 	cm.categories = categories
 }

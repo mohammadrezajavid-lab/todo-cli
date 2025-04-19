@@ -60,6 +60,10 @@ func (t *Task) SetUserId(userId uint) {
 	t.userId = userId
 }
 
+func (t *Task) SetId(id uint) {
+	t.id = id
+}
+
 // SetIsDone Setter method
 func (t *Task) SetIsDone(isDone bool) {
 	t.isDone = isDone
@@ -81,7 +85,7 @@ func (t *Task) String() string {
 
 func (t *Task) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
-		"id":         t.GetUserId(),
+		"id":         t.GetId(),
 		"title":      t.GetTitle(),
 		"dueDate":    t.GetDueDate(),
 		"categoryId": t.GetCategoryId(),

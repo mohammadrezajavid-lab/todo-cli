@@ -12,6 +12,11 @@ import (
 )
 
 func main() {
+
+	taskMemoryRepo := memoryStore.NewTaskMemory()
+	categoryMemoryRepo := memoryStore.NewCategoryMemory()
+	taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
+
 	listener, err := net.Listen("tcp", "127.0.0.1:1999")
 	if err != nil {
 		panic("can not create a listener, error:" + err.Error())
@@ -32,12 +37,20 @@ func main() {
 			panic("error in accepting connection, error:" + err.Error())
 		}
 
-		go handleConnection(conn, i)
+		go handleConnection(conn, taskService, i)
 		i++
 	}
 }
 
-func handleConnection(connection net.Conn, i int) {
+func handleConnection(connection net.Conn, taskService *task.Service, i int) {
+
+	//defer connection.Close()
+	defer func() {
+		if cErr := connection.Close(); cErr != nil {
+			log.Println("connection is not closed", cErr.Error())
+		}
+		log.Println("connection close ...")
+	}()
 
 	fmt.Println("A new connection established number assigned:", i)
 
@@ -53,36 +66,25 @@ func handleConnection(connection net.Conn, i int) {
 	}
 
 	// deserializing data for use in server
-	req := deliveryparam.NewRequest("")
+	req := deliveryparam.NewEmptyRequest()
 	if uErr := json.Unmarshal(buffer[:numberOfReadBytes], req); uErr != nil {
 		log.Println("bad request", uErr)
 
 		//continue
 	}
 
-	runCommand(connection, req)
+	runCommand(connection, taskService, req)
 
 	//}
 }
 
-func runCommand(connection net.Conn, request *deliveryparam.Request) {
-
-	//defer connection.Close()
-	defer func() {
-		if cErr := connection.Close(); cErr != nil {
-			log.Println("connection is not closed", cErr.Error())
-		}
-		log.Println("connection close ...")
-	}()
-
-	taskMemoryRepo := memoryStore.NewTaskMemory()
-	categoryMemoryRepo := memoryStore.NewCategoryMemory()
-	taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
+func runCommand(connection net.Conn, taskService *task.Service, request *deliveryparam.Request) {
 
 	switch request.GetCommand() {
 	case "create-task":
 
-		responseCreatedTask, cErr := taskService.CreateTask(taskparam.NewRequest("title", "dueDate", 0, 0))
+		newTask := request.GetTask()
+		responseCreatedTask, cErr := taskService.CreateTask(taskparam.NewRequest(newTask.GetTitle(), newTask.GetDueDate(), newTask.GetCategoryId(), 0))
 		if cErr != nil {
 			if _, wErr := connection.Write([]byte(cErr.Error())); wErr != nil {
 				log.Println("can't write data to connection", wErr)
@@ -93,7 +95,7 @@ func runCommand(connection net.Conn, request *deliveryparam.Request) {
 			return
 		}
 
-		data, mErr := json.Marshal(responseCreatedTask.GetTask())
+		data, mErr := json.Marshal(responseCreatedTask)
 		if mErr != nil {
 			log.Println("can't marshal responseCreatedTask:", mErr)
 
@@ -106,14 +108,15 @@ func runCommand(connection net.Conn, request *deliveryparam.Request) {
 			//continue
 		}
 	case "list-task":
-		responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(1999))
+
+		responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(0))
 		if lErr != nil {
 			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
 				log.Println("can't write data to connection", wErr)
 			}
 		}
 
-		data, mErr := json.Marshal(responseListTask.GetTasks())
+		data, mErr := json.Marshal(responseListTask)
 		if mErr != nil {
 			log.Println("can't marshal responseCreatedTask:", mErr)
 

@@ -1,7 +1,7 @@
 package taskparam
 
 type Request struct {
-	Task struct {
+	task struct {
 		title      string
 		dueDate    string
 		categoryId uint
@@ -12,7 +12,7 @@ type Request struct {
 
 func NewRequest(title string, dueDate string, categoryId uint, authenticatedUserId uint) *Request {
 	return &Request{
-		Task: struct {
+		task: struct {
 			title      string
 			dueDate    string
 			categoryId uint
@@ -22,13 +22,13 @@ func NewRequest(title string, dueDate string, categoryId uint, authenticatedUser
 }
 
 func (req *Request) GetTitle() string {
-	return req.Task.title
+	return req.task.title
 }
 func (req *Request) GetDueDate() string {
-	return req.Task.dueDate
+	return req.task.dueDate
 }
 func (req *Request) GetCategoryId() uint {
-	return req.Task.categoryId
+	return req.task.categoryId
 }
 func (req *Request) GetAuthenticatedUserId() uint {
 	return req.authenticatedUserId

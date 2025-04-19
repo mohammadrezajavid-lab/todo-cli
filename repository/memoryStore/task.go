@@ -15,13 +15,14 @@ func NewTaskMemory() *TaskMemory {
 func (tm *TaskMemory) SetTasks(tasks []*entity.Task) {
 	tm.tasks = tasks
 }
+
 func (tm *TaskMemory) GetTasks() []*entity.Task {
 	return tm.tasks
 }
 
 func (tm *TaskMemory) CreateNewTask(t *entity.Task) (*entity.Task, error) {
 
-	t.SetUserId(uint(len(tm.tasks) + 1))
+	t.SetId(uint(len(tm.tasks) + 1))
 
 	tm.SetTasks(append(tm.GetTasks(), t))
 
@@ -35,7 +36,7 @@ func (tm *TaskMemory) ListUserTasks(userId uint) ([]*entity.Task, error) {
 	userTasks := make([]*entity.Task, 0)
 	for _, t := range tm.GetTasks() {
 
-		if userId == t.GetId() {
+		if userId == t.GetUserId() {
 
 			userTasks = append(userTasks, t)
 		}

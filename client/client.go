@@ -35,7 +35,7 @@ func main() {
 	fmt.Printf("Connected to a tcp server on %s\n", connection.RemoteAddr())
 
 	// create one request and serialized data for sent to server
-	request := deliveryparam.NewRequest(message)
+	request := deliveryparam.NewRequest(message, "test title", "test time due date", 1999)
 	serializedData, mErr := json.Marshal(request)
 	if mErr != nil {
 		log.Fatalf("can't serialized data, error: %v\n", mErr)
