@@ -15,7 +15,6 @@ func NewCreateTaskResponse(task *entity.Task) *Response {
 func (r *Response) GetTask() *entity.Task {
 	return r.task
 }
-
 func (r *Response) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"task": r.GetTask(),

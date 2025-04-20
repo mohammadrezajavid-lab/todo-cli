@@ -20,7 +20,6 @@ func NewRequest(title string, dueDate string, categoryId uint, authenticatedUser
 		authenticatedUserId: authenticatedUserId,
 	}
 }
-
 func (req *Request) GetTitle() string {
 	return req.task.title
 }

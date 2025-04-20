@@ -31,3 +31,25 @@ func (cm *CategoryMemory) CheckCategoryId(categoryId uint, userId uint) (bool, e
 
 	return false, fmt.Errorf("this categoryId is not found: %d", categoryId)
 }
+
+func (cm *CategoryMemory) CreateNewCategory(c *entity.Category) (*entity.Category, error) {
+
+	c.SetId(uint(len(cm.GetCategories()) + 1))
+
+	cm.SetCategories(append(cm.GetCategories(), c))
+
+	return c, nil
+}
+
+func (cm *CategoryMemory) ListUserCategories(userId uint) ([]*entity.Category, error) {
+
+	var categories = make([]*entity.Category, 0)
+
+	for _, c := range cm.GetCategories() {
+		if userId == c.GetUserId() {
+			categories = append(categories, c)
+		}
+	}
+
+	return categories, nil
+}

@@ -1,13 +1,16 @@
 package deliveryparam
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 type Task struct {
 	title      string
 	dueDate    string
 	categoryId uint
+}
+
+type TaskRequest struct {
+	command string
+	task    *Task
 }
 
 func (t *Task) GetTitle() string {
@@ -55,21 +58,15 @@ func (t *Task) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type Request struct {
-	command string
-	task    *Task
-}
-
-func NewRequest(command string, title string, dueDate string, categoryId uint) *Request {
-	return &Request{command: command, task: &Task{
+func NewTaskRequest(command string, title string, dueDate string, categoryId uint) *TaskRequest {
+	return &TaskRequest{command: command, task: &Task{
 		title:      title,
 		dueDate:    dueDate,
 		categoryId: categoryId,
 	}}
 }
-
-func NewEmptyRequest() *Request {
-	return &Request{
+func NewEmptyTaskRequest() *TaskRequest {
+	return &TaskRequest{
 		command: "",
 		task: &Task{
 			title:      "",
@@ -78,22 +75,26 @@ func NewEmptyRequest() *Request {
 		},
 	}
 }
-
-func (r *Request) GetCommand() string {
+func (r *TaskRequest) GetCommand() string {
 	return r.command
 }
-func (r *Request) SetCommand(command string) {
+func (r *TaskRequest) SetCommand(command string) {
 	r.command = command
 }
-
-func (r *Request) GetTask() *Task {
+func (r *TaskRequest) GetTask() *Task {
 	return r.task
 }
-func (r *Request) SetTask(task *Task) {
+func (r *TaskRequest) SetTask(task *Task) {
 	r.task = task
 }
+func (r *TaskRequest) MarshalJSON() ([]byte, error) {
 
-func (r *Request) UnmarshalJSON(data []byte) error {
+	return json.Marshal(map[string]any{
+		"command": r.GetCommand(),
+		"task":    r.GetTask(),
+	})
+}
+func (r *TaskRequest) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		Command string `json:"command"`
 		Task    *Task  `json:"task"`
@@ -108,12 +109,4 @@ func (r *Request) UnmarshalJSON(data []byte) error {
 	r.SetTask(aux.Task)
 
 	return nil
-}
-
-func (r *Request) MarshalJSON() ([]byte, error) {
-
-	return json.Marshal(map[string]any{
-		"command": r.GetCommand(),
-		"task":    r.GetTask(),
-	})
 }

@@ -41,6 +41,10 @@ func (c *Category) GetUserId() uint {
 	return c.userId
 }
 
+func (c *Category) SetId(id uint) {
+	c.id = id
+}
+
 // SetTitle Setter method
 func (c *Category) SetTitle(title string) {
 	c.title = title

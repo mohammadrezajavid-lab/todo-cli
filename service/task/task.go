@@ -3,23 +3,18 @@ package task
 import (
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"gocasts.ir/go-fundamentals/todo-cli/service/servicecontract"
 	"gocasts.ir/go-fundamentals/todo-cli/service/task/taskparam"
 )
 
-type ServiceTaskRepository interface {
-	CreateNewTask(t *entity.Task) (*entity.Task, error)
-	ListUserTasks(userId uint) ([]*entity.Task, error)
-}
-type ServiceCategoryRepository interface {
-	CheckCategoryId(categoryId uint, userId uint) (bool, error)
-}
 type Service struct {
-	taskRepository     ServiceTaskRepository
-	categoryRepository ServiceCategoryRepository
+	taskRepository     servicecontract.ServiceTaskRepository
+	categoryRepository servicecontract.ServiceCheckCategoryIdRepository
 }
 
-func NewService(taskRepository ServiceTaskRepository,
-	categoryRepository ServiceCategoryRepository) *Service {
+func NewService(taskRepository servicecontract.ServiceTaskRepository,
+	categoryRepository servicecontract.ServiceCheckCategoryIdRepository) *Service {
+
 	return &Service{
 		taskRepository:     taskRepository,
 		categoryRepository: categoryRepository,
@@ -47,7 +42,6 @@ func (s *Service) CreateTask(taskReq *taskparam.Request) (*taskparam.Response, e
 func (s *Service) ListTask(listReq *taskparam.ListRequest) (*taskparam.ListResponse, error) {
 
 	tasks, err := s.taskRepository.ListUserTasks(listReq.GetUserId())
-
 	if err != nil {
 
 		return nil, fmt.Errorf("can't list tasks %v", err)

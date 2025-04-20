@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
+	"gocasts.ir/go-fundamentals/todo-cli/service/category"
+	"gocasts.ir/go-fundamentals/todo-cli/service/category/categoryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/service/task"
 	"gocasts.ir/go-fundamentals/todo-cli/service/task/taskparam"
 	"log"
@@ -42,9 +44,15 @@ func main() {
 	}
 }
 
-func handleConnection(connection net.Conn, taskService *task.Service, i int) {
+func handleConnection(
+	connection net.Conn,
+	taskService *task.Service,
+	categoryService *category.Service,
+	taskRequest *deliveryparam.TaskRequest,
+	categoryRequest *deliveryparam.CategoryRequest,
+	i int,
+) {
 
-	//defer connection.Close()
 	defer func() {
 		if cErr := connection.Close(); cErr != nil {
 			log.Println("connection is not closed", cErr.Error())
@@ -66,24 +74,30 @@ func handleConnection(connection net.Conn, taskService *task.Service, i int) {
 	}
 
 	// deserializing data for use in server
-	req := deliveryparam.NewEmptyRequest()
+	req := deliveryparam.NewEmptyTaskRequest()
 	if uErr := json.Unmarshal(buffer[:numberOfReadBytes], req); uErr != nil {
 		log.Println("bad request", uErr)
 
 		//continue
 	}
 
-	runCommand(connection, taskService, req)
+	runCommand(connection, taskService, categoryService, taskRequest, categoryRequest)
 
 	//}
 }
 
-func runCommand(connection net.Conn, taskService *task.Service, request *deliveryparam.Request) {
+func runCommand(
+	connection net.Conn,
+	taskService *task.Service,
+	categoryService *category.Service,
+	taskRequest *deliveryparam.TaskRequest,
+	categoryRequest *deliveryparam.CategoryRequest,
+) {
 
-	switch request.GetCommand() {
+	switch taskRequest.GetCommand() {
 	case "create-task":
 
-		newTask := request.GetTask()
+		newTask := taskRequest.GetTask()
 		responseCreatedTask, cErr := taskService.CreateTask(taskparam.NewRequest(newTask.GetTitle(), newTask.GetDueDate(), newTask.GetCategoryId(), 0))
 		if cErr != nil {
 			if _, wErr := connection.Write([]byte(cErr.Error())); wErr != nil {
@@ -117,6 +131,51 @@ func runCommand(connection net.Conn, taskService *task.Service, request *deliver
 		}
 
 		data, mErr := json.Marshal(responseListTask)
+		if mErr != nil {
+			log.Println("can't marshal responseCreatedTask:", mErr)
+
+			//continue
+		}
+
+		if _, wErr := connection.Write(data); wErr != nil {
+			log.Println("can't write data to connection", wErr)
+
+			//continue
+		}
+	case "create-category":
+
+		var newCategory *deliveryparam.Category = categoryRequest.GetCategory()
+		responseCreateCategory, cErr := categoryService.CreateCategory(categoryparam.NewRequest(newCategory.GetColor(), newCategory.GetTitle(), 0))
+		if cErr != nil {
+			if _, wErr := connection.Write([]byte(cErr.Error())); wErr != nil {
+				log.Println("can't write data to connection", wErr)
+
+				return
+				//continue
+			}
+			return
+		}
+		data, mErr := json.Marshal(responseCreateCategory)
+		if mErr != nil {
+			log.Println("can't marshal responseCreatedTask:", mErr)
+
+			//continue
+		}
+
+		if _, wErr := connection.Write(data); wErr != nil {
+			log.Println("can't write data to connection", wErr)
+
+			//continue
+		}
+	case "list-category":
+		responseListCategory, lErr := categoryService.ListCategory(categoryparam.NewListRequest(0))
+		if lErr != nil {
+			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
+				log.Println("can't write data to connection", wErr)
+			}
+		}
+
+		data, mErr := json.Marshal(responseListCategory)
 		if mErr != nil {
 			log.Println("can't marshal responseCreatedTask:", mErr)
 
