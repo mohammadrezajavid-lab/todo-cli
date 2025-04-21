@@ -6,6 +6,8 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/pkg"
 	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
+	"gocasts.ir/go-fundamentals/todo-cli/service/category"
+	"gocasts.ir/go-fundamentals/todo-cli/service/category/categoryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/service/user"
 	"gocasts.ir/go-fundamentals/todo-cli/service/user/userparam"
 	"log"
@@ -15,9 +17,10 @@ import (
 func main() {
 
 	//taskMemoryRepo := memoryStore.NewTaskMemory()
-	//categoryMemoryRepo := memoryStore.NewCategoryMemory()
 	//taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
+	var categoryMemoryRepo *memoryStore.CategoryMemory = memoryStore.NewCategoryMemory()
 	var userMemoryRepo *memoryStore.UserMemory = memoryStore.NewUserMemory()
+	var categoryService *category.Service = category.NewService(categoryMemoryRepo)
 	var userService *user.Service = user.NewService(userMemoryRepo)
 
 	listener, err := net.Listen("tcp", "127.0.0.1:1999")
@@ -39,11 +42,11 @@ func main() {
 			panic("error in accepting connection, error:" + err.Error())
 		}
 
-		go handleConnection(conn, userService)
+		go handleConnection(conn, userService, categoryService)
 	}
 }
 
-func handleConnection(connection net.Conn, userService *user.Service) {
+func handleConnection(connection net.Conn, userService *user.Service, categoryService *category.Service) {
 
 	defer func() {
 		if cErr := connection.Close(); cErr != nil {
@@ -59,11 +62,11 @@ func handleConnection(connection net.Conn, userService *user.Service) {
 		if command == "exit" {
 			break
 		}
-		runCommand(connection, command, userService)
+		runCommand(connection, command, userService, categoryService)
 	}
 }
 
-func runCommand(connection net.Conn, command string, userService *user.Service) {
+func runCommand(connection net.Conn, command string, userService *user.Service, categoryService *category.Service) {
 
 	switch command {
 	case "login-user":
@@ -108,16 +111,14 @@ func runCommand(connection net.Conn, command string, userService *user.Service) 
 		var rawUser = make([]byte, 1024)
 		numberOfReadBytes, rErr := connection.Read(rawUser)
 		if rErr != nil {
-			log.Printf("can't read data user from client in login, error: %v", rErr)
+			log.Printf("can't read data user from client in register-user, error: %v", rErr)
 		}
-
 		requestUser := deliveryparam.NewRegisterUserRequest("", "", "")
 		if uErr := json.Unmarshal(rawUser[:numberOfReadBytes], requestUser); uErr != nil {
-			log.Printf("can't unmarshal user in login, error: %v", uErr)
+			log.Printf("can't unmarshal user in register-user, error: %v", uErr)
 		}
 
 		var responseRegisterUser, registerUserErr = userService.RegisterUser(userparam.NewRequestRegisterUser(requestUser.GetName(), requestUser.GetEmail(), pkg.HashPassword(requestUser.GetPassword())))
-
 		if registerUserErr != nil {
 			log.Printf("user can't register, email: %s\nerror: %v", responseRegisterUser.GetEmail(), registerUserErr)
 
@@ -143,33 +144,46 @@ func runCommand(connection net.Conn, command string, userService *user.Service) 
 		}
 		log.Printf("registered user by email: %v", responseRegisterUser.GetEmail())
 
-		/*case "create-task":
+	case "new-category":
 
-			newTask := taskRequest.GetTask()
-			responseCreatedTask, cErr := taskService.CreateTask(taskparam.NewRequest(newTask.GetTitle(), newTask.GetDueDate(), newTask.GetCategoryId(), 0))
-			if cErr != nil {
-				if _, wErr := connection.Write([]byte(cErr.Error())); wErr != nil {
-					log.Println("can't write data to connection", wErr)
+		var rawCategory = make([]byte, 1024)
+		numberOfReadBytes, rErr := connection.Read(rawCategory)
+		if rErr != nil {
+			log.Printf("can't read data user from client in new-category, error: %v", rErr)
+		}
+		categoryRequest := deliveryparam.NewCategoryRequest("", "", 0)
+		if uErr := json.Unmarshal(rawCategory[:numberOfReadBytes], categoryRequest); uErr != nil {
+			log.Printf("can't unmarshal user in new-category, error: %v", uErr)
+		}
 
-					return
-					//continue
-				}
-				return
-			}
+		createCategoryResponse, cErr := categoryService.CreateCategory(categoryparam.NewRequest(categoryRequest.GetTitle(), categoryRequest.GetColor(), categoryRequest.GetAuthenticatedUserId()))
+		if cErr != nil {
+			log.Printf("can't create category \nerror: %v", cErr)
 
-			data, mErr := json.Marshal(responseCreatedTask)
+			responseCreateCategory := deliveryparam.NewCategoryResponse(createCategoryResponse.GetCategory().GetId(), cErr)
+			serializedData, mErr := json.Marshal(responseCreateCategory)
 			if mErr != nil {
-				log.Println("can't marshal responseCreatedTask:", mErr)
-
-				//continue
+				log.Printf("can't marshal data  in new-category: %v", mErr)
 			}
 
-			if _, wErr := connection.Write(data); wErr != nil {
-				log.Println("can't write data to connection", wErr)
-
-				//continue
+			if _, wErr := connection.Write(serializedData); wErr != nil {
+				log.Fatalf("can't write data to connection: %v", wErr)
 			}
-		case "list-task":
+			return
+		}
+
+		responseCreateCategory := deliveryparam.NewCategoryResponse(createCategoryResponse.GetCategory().GetId(), nil)
+		serializedData, mErr := json.Marshal(responseCreateCategory)
+		if mErr != nil {
+			log.Printf("can't marshal data  in new-category: %v", mErr)
+		}
+
+		if _, wErr := connection.Write(serializedData); wErr != nil {
+			log.Fatalf("can't write data to connection: %v", wErr)
+		}
+
+		log.Printf("category %s is created", responseCreateCategory.GetTitle())
+		/*case "list-task":
 
 			responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(0))
 			if lErr != nil {

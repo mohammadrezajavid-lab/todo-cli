@@ -81,12 +81,10 @@ func registerUser(command string, connection net.Conn) {
 	sendCommand(command, connection)
 
 	requestRegisterUser := deliveryparam.NewRegisterUserRequest(name, email, password)
-
 	serializedUser, mErr := json.Marshal(requestRegisterUser)
 	if mErr != nil {
 		log.Fatalf("can't marshal data command register-user: %v", mErr)
 	}
-
 	if _, wErr := connection.Write(serializedUser); wErr != nil {
 		log.Fatalf("can't write data to connection: %v", wErr)
 	}
@@ -96,7 +94,6 @@ func registerUser(command string, connection net.Conn) {
 	if rErr != nil {
 		log.Fatalf("can't read data from connection in register-user, error: %v", rErr)
 	}
-
 	var userRegisterResponse *deliveryparam.RegisterUserResponse = deliveryparam.NewRegisterUserResponse("", nil)
 	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], userRegisterResponse); uErr != nil {
 		log.Fatalf("can't unmarshal data in register-user response %v", uErr)
@@ -107,11 +104,47 @@ func registerUser(command string, connection net.Conn) {
 	fmt.Printf("%s is registerd!\n", userRegisterResponse.GetEmail())
 }
 
+func newCategory(command string, connection net.Conn) {
+
+	fmt.Println("Create New Category!")
+
+	fmt.Print("enter title: ")
+	var title string = pkg.ReadInput()
+
+	fmt.Print("enter color: ")
+	var color string = pkg.ReadInput()
+
+	sendCommand(command, connection)
+
+	requestCreateCategory := deliveryparam.NewCategoryRequest(title, color, authenticatedUserId)
+	serializedCategory, mErr := json.Marshal(requestCreateCategory)
+	if mErr != nil {
+		log.Fatalf("can't marshal data new-category: %v", mErr)
+	}
+	if _, wErr := connection.Write(serializedCategory); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawResponse = make([]byte, 1024)
+	numberOfReadBytes, rErr := connection.Read(rawResponse)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in new-category, error: %v", rErr)
+	}
+	var responseCreateCategory *deliveryparam.CategoryResponse = deliveryparam.NewCategoryResponse(0, nil)
+	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], responseCreateCategory); uErr != nil {
+		log.Fatalf("can't unmarshal data in new-category response %v", uErr)
+	}
+	if responseCreateCategory.GetError() != nil {
+		log.Fatalf("can't create this category, \nerror: %v", responseCreateCategory.GetError())
+	}
+
+	fmt.Printf("category [%s] is create!\n", responseCreateCategory.GetTitle())
+}
+
 func runCommand(command string, connection net.Conn) {
 
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
-		//ToDo login function
-
+		login(command, connection)
 		return
 	}
 	switch command {
@@ -120,11 +153,11 @@ func runCommand(command string, connection net.Conn) {
 	case "register-user":
 		registerUser(command, connection)
 	case "new-category":
-		// ToDo newCategory
+		newCategory(command, connection)
+	case "new-task":
+		// newTask(command, connection)
 	case "list-category":
 		// ToDo list category
-	case "new-task":
-		// ToDo newTask
 	case "list-task":
 		// ToDo list task
 	case "tasks-date":
