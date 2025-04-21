@@ -21,7 +21,7 @@ func NewService(taskRepository servicecontract.ServiceTaskRepository,
 	}
 }
 
-func (s *Service) CreateTask(taskReq *taskparam.Request) (*taskparam.Response, error) {
+func (s *Service) CreateTask(taskReq *taskparam.RequestTask) (*taskparam.ResponseTask, error) {
 
 	//var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.Task.categoryId, taskReq.authenticatedUserId)
 	//if cErr != nil {

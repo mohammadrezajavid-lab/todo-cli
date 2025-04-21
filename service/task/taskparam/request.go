@@ -1,6 +1,6 @@
 package taskparam
 
-type Request struct {
+type RequestTask struct {
 	task struct {
 		title      string
 		dueDate    string
@@ -10,8 +10,8 @@ type Request struct {
 	authenticatedUserId uint
 }
 
-func NewRequest(title string, dueDate string, categoryId uint, authenticatedUserId uint) *Request {
-	return &Request{
+func NewRequest(title string, dueDate string, categoryId uint, authenticatedUserId uint) *RequestTask {
+	return &RequestTask{
 		task: struct {
 			title      string
 			dueDate    string
@@ -20,16 +20,16 @@ func NewRequest(title string, dueDate string, categoryId uint, authenticatedUser
 		authenticatedUserId: authenticatedUserId,
 	}
 }
-func (req *Request) GetTitle() string {
+func (req *RequestTask) GetTitle() string {
 	return req.task.title
 }
-func (req *Request) GetDueDate() string {
+func (req *RequestTask) GetDueDate() string {
 	return req.task.dueDate
 }
-func (req *Request) GetCategoryId() uint {
+func (req *RequestTask) GetCategoryId() uint {
 	return req.task.categoryId
 }
-func (req *Request) GetAuthenticatedUserId() uint {
+func (req *RequestTask) GetAuthenticatedUserId() uint {
 	return req.authenticatedUserId
 }
 

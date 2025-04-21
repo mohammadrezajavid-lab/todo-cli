@@ -5,17 +5,17 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
 )
 
-type Response struct {
+type ResponseTask struct {
 	task *entity.Task
 }
 
-func NewCreateTaskResponse(task *entity.Task) *Response {
-	return &Response{task: task}
+func NewCreateTaskResponse(task *entity.Task) *ResponseTask {
+	return &ResponseTask{task: task}
 }
-func (r *Response) GetTask() *entity.Task {
+func (r *ResponseTask) GetTask() *entity.Task {
 	return r.task
 }
-func (r *Response) MarshalJSON() ([]byte, error) {
+func (r *ResponseTask) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"task": r.GetTask(),
 	})

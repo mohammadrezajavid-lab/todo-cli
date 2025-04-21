@@ -26,6 +26,10 @@ func (u *User) GetId() uint {
 	return u.id
 }
 
+func (u *User) SetId(id uint) {
+	u.id = id
+}
+
 // GetPassword Getter method
 func (u *User) GetPassword() []uint8 {
 	return u.password
