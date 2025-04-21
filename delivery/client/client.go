@@ -9,10 +9,9 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 )
 
-var authenticatedUserId int
+var authenticatedUserId uint
 
 func sendCommand(command string, connection net.Conn) {
 
@@ -41,7 +40,7 @@ func login(command string, connection net.Conn) {
 	requestUser := deliveryparam.NewUserRequest(email, password)
 	serializedUser, mErr := json.Marshal(requestUser)
 	if mErr != nil {
-		log.Fatalf("can't marshal data command login: %v", mErr)
+		log.Fatalf("can't marshal data command login-user: %v", mErr)
 	}
 
 	if _, wErr := connection.Write(serializedUser); wErr != nil {
@@ -51,17 +50,65 @@ func login(command string, connection net.Conn) {
 	var rawResponse = make([]byte, 1024)
 	numberOfReadBytes, rErr := connection.Read(rawResponse)
 	if rErr != nil {
-		log.Fatalf("can't read data from connection, error: %v", rErr)
+		log.Fatalf("can't read data from connection in login-user, error: %v", rErr)
+	}
+	var userResponse *deliveryparam.UserResponse = deliveryparam.NewUserResponse(0)
+	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], userResponse); uErr != nil {
+		log.Fatalf("can't unmarshal data in login-user response %v", uErr)
 	}
 
-	authenticatedUserId, _ = strconv.Atoi(string(rawResponse[:numberOfReadBytes]))
+	authenticatedUserId = userResponse.GetAuthenticateUserId()
 
 	if authenticatedUserId == 0 {
 		fmt.Print("invalid email or password!\n")
+	} else {
+		fmt.Println("welcome to todo-cli, successful login")
 	}
 }
 
+func registerUser(command string, connection net.Conn) {
+	fmt.Print("register user!\n")
+
+	fmt.Print("enter name: ")
+	var name string = pkg.ReadInput()
+
+	fmt.Print("enter email: ")
+	var email string = pkg.ReadInput()
+
+	fmt.Print("enter password: ")
+	var password string = pkg.ReadInput()
+
+	sendCommand(command, connection)
+
+	requestRegisterUser := deliveryparam.NewRegisterUserRequest(name, email, password)
+
+	serializedUser, mErr := json.Marshal(requestRegisterUser)
+	if mErr != nil {
+		log.Fatalf("can't marshal data command register-user: %v", mErr)
+	}
+
+	if _, wErr := connection.Write(serializedUser); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawResponse = make([]byte, 1024)
+	numberOfReadBytes, rErr := connection.Read(rawResponse)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in register-user, error: %v", rErr)
+	}
+
+	var userRegisterResponse *deliveryparam.RegisterUserResponse = deliveryparam.NewRegisterUserResponse("", nil)
+	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], userRegisterResponse); uErr != nil {
+		log.Fatalf("can't unmarshal data in register-user response %v", uErr)
+	}
+	if userRegisterResponse.GetError() != nil {
+		log.Fatalf("can't register user, email: %s\nerror: %v", userRegisterResponse.GetEmail(), userRegisterResponse.GetError())
+	}
+	fmt.Printf("%s is registerd!\n", userRegisterResponse.GetEmail())
+}
+
 func runCommand(command string, connection net.Conn) {
+
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
 		//ToDo login function
 
@@ -71,7 +118,7 @@ func runCommand(command string, connection net.Conn) {
 	case "login-user":
 		login(command, connection)
 	case "register-user":
-		// ToDo registeredUser
+		registerUser(command, connection)
 	case "new-category":
 		// ToDo newCategory
 	case "list-category":
@@ -112,47 +159,10 @@ func main() {
 
 	fmt.Printf("Connected to a tcp server on %s\n", connection.RemoteAddr())
 
-	// load data from storage
 	for {
 		runCommand(command, connection)
 
 		fmt.Print("please enter another command: ")
 		command = pkg.ReadInput()
 	}
-
-	// create one request and serialized data for sent to server
-	//request := deliveryparam.NewTaskRequest(message, "test title", "test time due date", 1999)
-	//serializedData, mErr := json.Marshal(request)
-	//if mErr != nil {
-	//	log.Fatalf("can't serialized data, error: %v\n", mErr)
-	//}
-	//
-	//send serialized data to server
-	//if _, wErr := connection.Write(serializedData); wErr != nil {
-	//	log.Fatalf("can't write data to connection: %s\n Error: %v\n", connection.RemoteAddr(), wErr)
-	//}
-	//
-	//var responseData = make([]byte, 1024)
-	//numberOfByteRead, rErr := connection.Read(responseData)
-	//if rErr != nil {
-	//	log.Printf("can't read data from connection, error: %v", rErr)
-	//}
-	//fmt.Println("\nResponse, this task is create: ", string(responseData[:numberOfByteRead]))
-
-	//fmt.Println("Write something to send to server")
-	//
-	//var message string
-	//scanner := bufio.NewScanner(os.Stdin)
-	//for {
-	//	fmt.Print(">> ")
-	//
-	//	scanner.Scan()
-	//	message = scanner.Text()
-	//
-	//	if message == "exit" {
-	//		return
-	//	}
-	//
-	//	fmt.Fprint(connection, message)
-	//}
 }

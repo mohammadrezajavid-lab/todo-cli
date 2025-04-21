@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
+	"gocasts.ir/go-fundamentals/todo-cli/pkg"
 	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
 	"gocasts.ir/go-fundamentals/todo-cli/service/user"
 	"gocasts.ir/go-fundamentals/todo-cli/service/user/userparam"
@@ -102,6 +103,45 @@ func runCommand(connection net.Conn, command string, userService *user.Service) 
 		if _, wErr := connection.Write(serializedResUser); wErr != nil {
 			log.Fatalf("can't write data to connection: %v", wErr)
 		}
+	case "register-user":
+
+		var rawUser = make([]byte, 1024)
+		numberOfReadBytes, rErr := connection.Read(rawUser)
+		if rErr != nil {
+			log.Printf("can't read data user from client in login, error: %v", rErr)
+		}
+
+		requestUser := deliveryparam.NewRegisterUserRequest("", "", "")
+		if uErr := json.Unmarshal(rawUser[:numberOfReadBytes], requestUser); uErr != nil {
+			log.Printf("can't unmarshal user in login, error: %v", uErr)
+		}
+
+		var responseRegisterUser, registerUserErr = userService.RegisterUser(userparam.NewRequestRegisterUser(requestUser.GetName(), requestUser.GetEmail(), pkg.HashPassword(requestUser.GetPassword())))
+
+		if registerUserErr != nil {
+			log.Printf("user can't register, email: %s\nerror: %v", responseRegisterUser.GetEmail(), registerUserErr)
+
+			responseUser := deliveryparam.NewRegisterUserResponse(responseRegisterUser.GetEmail(), registerUserErr)
+			serializedResUser, mErr := json.Marshal(responseUser)
+			if mErr != nil {
+				log.Printf("can't marshal data  in register-user: %v", mErr)
+			}
+
+			if _, wErr := connection.Write(serializedResUser); wErr != nil {
+				log.Fatalf("can't write data to connection: %v", wErr)
+			}
+			return
+		}
+		responseUser := deliveryparam.NewRegisterUserResponse(responseRegisterUser.GetEmail(), nil)
+		serializedResUser, mErr := json.Marshal(responseUser)
+		if mErr != nil {
+			log.Printf("can't marshal data  serializedResponseUser register-user: %v", mErr)
+		}
+
+		if _, wErr := connection.Write(serializedResUser); wErr != nil {
+			log.Fatalf("can't write data to connection: %v", wErr)
+		}
+		log.Printf("registered user by email: %v", responseRegisterUser.GetEmail())
 
 		/*case "create-task":
 
