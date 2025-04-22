@@ -6,19 +6,15 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/contract"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
-	"gocasts.ir/go-fundamentals/todo-cli/filestore"
 	"gocasts.ir/go-fundamentals/todo-cli/pkg"
+	"gocasts.ir/go-fundamentals/todo-cli/repository/filestore"
+	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
+	"gocasts.ir/go-fundamentals/todo-cli/service/task"
 	"os"
 	"strconv"
 )
 
-var (
-	authenticatedUser *entity.User
-	//userTasks         []*entity.Task
-	//userStorage []*entity.User
-	//categories  []*entity.Category
-	//tasks       []*entity.Task
-)
+var authenticatedUser *entity.User
 
 func init() {
 
@@ -86,12 +82,12 @@ func newTask(store contract.Store[entity.Task]) {
 	fmt.Print("enter category: ")
 	var category, _ = strconv.Atoi(pkg.ReadInput())
 
-	t := entity.NewTask(uint(len(store.GetObjectsStore()))+1, title, dueDate, uint(category), authenticatedUser.GetId())
-	store.SetObjectsStore(append(store.GetObjectsStore(), t))
-
-	store.Save(t)
-
-	fmt.Printf("task [%s] is create!\n", t.GetTitle())
+	//t := entity.NewTask(uint(len(store.GetObjectsStore()))+1, title, dueDate, uint(category), authenticatedUser.GetId())
+	//store.SetObjectsStore(append(store.GetObjectsStore(), t))
+	//
+	//store.Save(t)
+	//
+	//fmt.Printf("task [%s] is create!\n", t.GetTitle())
 }
 
 func listTask(store contract.Store[entity.Task]) []*entity.Task {
@@ -174,12 +170,12 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 		registeredUser(uStore)
 	case "new-category":
 		newCategory(cStore)
+	case "list-category":
+		PrintObjects[entity.Category](listCategory(cStore))
 	case "new-task":
 		newTask(tStore)
 	case "list-task":
 		PrintObjects[entity.Task](listTask(tStore))
-	case "list-category":
-		PrintObjects[entity.Category](listCategory(cStore))
 	case "tasks-date":
 		fmt.Println(tasksByDate(tStore))
 	case "exit":
@@ -190,12 +186,17 @@ func runCommand(command string, uStore contract.Store[entity.User], tStore contr
 }
 
 func PrintObjects[T any](objects []*T) {
-	for _, t := range objects {
-		fmt.Print(t)
+	for _, obj := range objects {
+		fmt.Print(obj)
 	}
 }
 
 func main() {
+
+	//taskMemoryRepo := memoryStore.NewTaskMemory()
+	//categoryMemoryRepo := memoryStore.NewCategoryMemory()
+	//
+	//taskService := task.NewService(taskMemoryRepo, categoryMemoryRepo)
 
 	var command string
 	flag.StringVar(&command, "command", "no-command", "command to run")

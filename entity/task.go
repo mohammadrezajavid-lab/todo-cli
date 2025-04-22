@@ -55,6 +55,23 @@ func (t *Task) GetUserId() uint {
 	return t.userId
 }
 
+// SetUserId Setter method
+func (t *Task) SetUserId(userId uint) {
+	t.userId = userId
+}
+
+func (t *Task) SetId(id uint) {
+	t.id = id
+}
+
+func (t *Task) SetCategoryId(categoryId uint) {
+	t.categoryId = categoryId
+}
+
+func (t *Task) SetTitle(title string) {
+	t.title = title
+}
+
 // SetIsDone Setter method
 func (t *Task) SetIsDone(isDone bool) {
 	t.isDone = isDone
@@ -76,11 +93,36 @@ func (t *Task) String() string {
 
 func (t *Task) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
-		"id":         t.GetUserId(),
+		"id":         t.GetId(),
 		"title":      t.GetTitle(),
 		"dueDate":    t.GetDueDate(),
 		"categoryId": t.GetCategoryId(),
 		"isDone":     t.GetIsDone(),
 		"userId":     t.GetUserId(),
 	})
+}
+
+func (t *Task) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Id         uint   `json:"id"`
+		Title      string `json:"title"`
+		DueDate    string `json:"dueDate"`
+		CategoryId uint   `json:"categoryId"`
+		IsDone     bool   `json:"isDone"`
+		UserId     uint   `json:"userId"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetId(aux.Id)
+	t.SetTitle(aux.Title)
+	t.SetDueDate(aux.DueDate)
+	t.SetCategoryId(aux.CategoryId)
+	t.SetIsDone(aux.IsDone)
+	t.SetUserId(aux.UserId)
+
+	return nil
 }

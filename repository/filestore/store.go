@@ -9,9 +9,9 @@ import (
 )
 
 type Store[T interface{}] struct {
-	filePath    string
-	permFile    os.FileMode
-	entityStore []*T
+	filePath string
+	permFile os.FileMode
+	//entityStore []*T
 }
 
 func (s *Store[T]) Save(t *T) {
@@ -49,21 +49,21 @@ func (s *Store[T]) Load(*T) []*T {
 }
 
 // GetObjectsStore Getter method
-func (s *Store[T]) GetObjectsStore() []*T {
-	return s.entityStore
-}
+//func (s *Store[T]) GetObjectsStore() []*T {
+//	return s.entityStore
+//}
 
 // SetObjectsStore Getter method
-func (s *Store[T]) SetObjectsStore(entityStore []*T) {
-	s.entityStore = entityStore
-}
+//func (s *Store[T]) SetObjectsStore(entityStore []*T) {
+//	s.entityStore = entityStore
+//}
 
 // NewStore constructor method
 func NewStore[T any](filePath string, permFile os.FileMode) *Store[T] {
 	return &Store[T]{
-		filePath:    filePath,
-		permFile:    permFile,
-		entityStore: make([]*T, 0),
+		filePath: filePath,
+		permFile: permFile,
+		//entityStore: make([]*T, 0),
 	}
 }
 
@@ -111,6 +111,7 @@ func (s *Store[T]) writeToFile(object []byte) {
 }
 
 func (s *Store[T]) readFile() []byte {
+
 	file, _ := os.OpenFile(s.GetFilePath(), os.O_RDONLY, s.GetPermFile())
 
 	defer func(f *os.File) {

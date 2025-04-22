@@ -5,14 +5,26 @@ A practice project implementing a simple todo app while attending the [gocasts](
 ## Usage
 
 ```bash
-# build project
-go build -o todo-cli
+# build client project
+cd ./delivery/client
+go build -o client-todocli client.go
 
-# show help project
-./todo-cli -h
+# build server project
+cd ./delivery/tcpserver
+go build -o server-todocli server.go
 
-# 
-./todo-cli --command [login | register-user | new-task| new-category | list-task | list-category | tasks-date | exit]
+# show help client project
+./client-todocli -h
+
+# show help server project
+./server-todocli -h
+
+# run client
+./client-todocli --command [login | register-user | new-task| new-category | list-task | list-category | tasks-date | exit] --ip [ipAddr:port]
+
+# run server (The server is available by default at the following address: 127.0.0.1:1999)
+./server-todocli
+
 ```
 ## Entities
 

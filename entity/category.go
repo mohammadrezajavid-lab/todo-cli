@@ -41,6 +41,10 @@ func (c *Category) GetUserId() uint {
 	return c.userId
 }
 
+func (c *Category) SetId(id uint) {
+	c.id = id
+}
+
 // SetTitle Setter method
 func (c *Category) SetTitle(title string) {
 	c.title = title
@@ -49,6 +53,10 @@ func (c *Category) SetTitle(title string) {
 // SetColor Setter method
 func (c *Category) SetColor(color string) {
 	c.color = color
+}
+
+func (c *Category) SetUserId(userId uint) {
+	c.userId = userId
 }
 
 func (c *Category) String() string {
@@ -67,4 +75,25 @@ func (c *Category) MarshalJSON() ([]byte, error) {
 		"color":  c.GetColor(),
 		"userId": c.GetUserId(),
 	})
+}
+
+func (c *Category) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Id     uint   `json:"id"`
+		Title  string `json:"title"`
+		Color  string `json:"color"`
+		UserId uint   `json:"userId"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	c.SetId(aux.Id)
+	c.SetTitle(aux.Title)
+	c.SetColor(aux.Color)
+	c.SetUserId(aux.UserId)
+
+	return nil
 }
