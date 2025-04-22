@@ -234,6 +234,37 @@ func listTask(command string, connection net.Conn) {
 	fmt.Printf("your tasks: \n%s\n", taskListRes.String())
 }
 
+func tasksByDate(command string, connection net.Conn) {
+
+	fmt.Println("list tasks by date...")
+
+	fmt.Print("enter due date: ")
+	var dueDate string = pkg.ReadInput()
+
+	sendCommand(command, connection)
+
+	var taskListDateReq = deliveryparam.NewListTaskByDateRequest(authenticatedUserId, dueDate)
+	marshalTaskListDateReq, mErr := json.Marshal(taskListDateReq)
+	if mErr != nil {
+		log.Fatalf("can't marshal data list-task: %v", mErr)
+	}
+	if _, wErr := connection.Write(marshalTaskListDateReq); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawTasks = make([]byte, 2048)
+	numberOfReadBytes, rErr := connection.Read(rawTasks)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in task-date, error: %v", rErr)
+	}
+	var taskListDateRes = deliveryparam.NewListTaskByDateResponse()
+	if uErr := json.Unmarshal(rawTasks[:numberOfReadBytes], taskListDateRes); uErr != nil {
+		log.Fatalf("can't unmarshal data in list-task response %v", uErr)
+	}
+
+	fmt.Printf("your tasks: \n%s\n", taskListDateRes.String())
+}
+
 func runCommand(command string, connection net.Conn) {
 
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
@@ -254,7 +285,7 @@ func runCommand(command string, connection net.Conn) {
 	case "list-task":
 		listTask(command, connection)
 	case "tasks-date":
-		// ToDo tasksByDate
+		tasksByDate(command, connection)
 	case "exit":
 		sendCommand(command, connection)
 		os.Exit(0)

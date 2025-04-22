@@ -213,3 +213,96 @@ func (t *ListTaskResponse) String() string {
 
 	return categoriesStr.String()
 }
+
+type ListTaskByDateRequest struct {
+	authenticatedUserId uint
+	dueDate             string
+}
+
+func NewListTaskByDateRequest(authenticatedUserId uint, dueDate string) *ListTaskByDateRequest {
+	return &ListTaskByDateRequest{
+		authenticatedUserId: authenticatedUserId,
+		dueDate:             dueDate,
+	}
+}
+func (t *ListTaskByDateRequest) GetAuthenticatedUserId() uint {
+	return t.authenticatedUserId
+}
+func (t *ListTaskByDateRequest) SetAuthenticatedUserId(authenticatedUserId uint) {
+	t.authenticatedUserId = authenticatedUserId
+}
+func (t *ListTaskByDateRequest) GetDueDate() string {
+	return t.dueDate
+}
+func (t *ListTaskByDateRequest) SetDueDate(dueDate string) {
+	t.dueDate = dueDate
+}
+func (t *ListTaskByDateRequest) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"authenticatedUserId": t.GetAuthenticatedUserId(),
+		"dueDate":             t.GetDueDate(),
+	})
+}
+func (t *ListTaskByDateRequest) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		AuthenticatedUserId uint   `json:"authenticatedUserId"`
+		DueDate             string `json:"dueDate"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetAuthenticatedUserId(aux.AuthenticatedUserId)
+	t.SetDueDate(aux.DueDate)
+
+	return nil
+}
+
+type ListTaskByDateResponse struct {
+	tasks []*entity.Task
+}
+
+func NewListTaskByDateResponse() *ListTaskByDateResponse {
+	return &ListTaskByDateResponse{
+		tasks: make([]*entity.Task, 0),
+	}
+}
+func (t *ListTaskByDateResponse) GetTasks() []*entity.Task {
+	return t.tasks
+}
+func (t *ListTaskByDateResponse) SetTasks(tasks []*entity.Task) {
+	t.tasks = tasks
+}
+func (t *ListTaskByDateResponse) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"tasks": t.GetTasks(),
+	})
+}
+func (t *ListTaskByDateResponse) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Tasks []*entity.Task `json:"tasks"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetTasks(aux.Tasks)
+
+	return nil
+}
+func (t *ListTaskByDateResponse) String() string {
+
+	var categoriesStr strings.Builder = strings.Builder{}
+	for _, cat := range t.GetTasks() {
+
+		categoriesStr.WriteString(cat.String())
+	}
+
+	return categoriesStr.String()
+}

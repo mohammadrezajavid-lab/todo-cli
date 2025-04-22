@@ -274,6 +274,31 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		if _, wErr := connection.Write(data); wErr != nil {
 			log.Println("can't write data to connection", wErr)
 		}
+	case "tasks-date":
+
+		var taskListReq = deliveryparam.NewListTaskByDateRequest(0, "")
+		var buffer = make([]byte, 500)
+		numberOfReadBytes, rErr := connection.Read(buffer)
+		if rErr != nil {
+			log.Printf("can't read data from connection in list-task, error: %v", rErr)
+		}
+		if uErr := json.Unmarshal(buffer[:numberOfReadBytes], taskListReq); uErr != nil {
+			log.Printf("can't unmarshal data in list-category response %v", uErr)
+		}
+
+		taskListRes, lErr := taskService.ListTaskByDueDate(taskparam.NewListByDateRequest(taskListReq.GetAuthenticatedUserId(), taskListReq.GetDueDate()))
+		if lErr != nil {
+			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
+				log.Println("can't write data to connection", wErr)
+			}
+		}
+		data, mErr := json.Marshal(taskListRes)
+		if mErr != nil {
+			log.Println("can't marshal taskListRes:", mErr)
+		}
+		if _, wErr := connection.Write(data); wErr != nil {
+			log.Println("can't write data to connection", wErr)
+		}
 	}
 }
 

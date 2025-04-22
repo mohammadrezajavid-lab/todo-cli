@@ -43,3 +43,21 @@ func NewListRequest(userId uint) *ListRequest {
 func (lr *ListRequest) GetUserId() uint {
 	return lr.userId
 }
+
+type ListByDateRequest struct {
+	userId  uint
+	dueDate string
+}
+
+func NewListByDateRequest(userId uint, dueDate string) *ListByDateRequest {
+	return &ListByDateRequest{
+		userId:  userId,
+		dueDate: dueDate,
+	}
+}
+func (lr *ListByDateRequest) GetUserId() uint {
+	return lr.userId
+}
+func (lr *ListByDateRequest) GetDueDate() string {
+	return lr.dueDate
+}
