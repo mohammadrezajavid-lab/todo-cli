@@ -146,7 +146,7 @@ func listCategory(command string, connection net.Conn) {
 
 	sendCommand(command, connection)
 
-	var catListReq *deliveryparam.CategoryListRequest = deliveryparam.NewCategoryListRequest(authenticatedUserId)
+	var catListReq = deliveryparam.NewCategoryListRequest(authenticatedUserId)
 	serializedCatListReq, mErr := json.Marshal(catListReq)
 	if mErr != nil {
 		log.Fatalf("can't marshal data list-category: %v", mErr)
@@ -208,6 +208,32 @@ func newTask(command string, connection net.Conn) {
 	fmt.Printf("task [%s] by id: [%d] is create!\n", resNewTask.GetTitle(), resNewTask.GetTaskId())
 }
 
+func listTask(command string, connection net.Conn) {
+
+	sendCommand(command, connection)
+
+	var taskListReq = deliveryparam.NewListTaskRequest(authenticatedUserId)
+	marshalTaskListReq, mErr := json.Marshal(taskListReq)
+	if mErr != nil {
+		log.Fatalf("can't marshal data list-task: %v", mErr)
+	}
+	if _, wErr := connection.Write(marshalTaskListReq); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawTasks = make([]byte, 2048)
+	numberOfReadBytes, rErr := connection.Read(rawTasks)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in list-task, error: %v", rErr)
+	}
+	var taskListRes = deliveryparam.NewListTaskResponse()
+	if uErr := json.Unmarshal(rawTasks[:numberOfReadBytes], taskListRes); uErr != nil {
+		log.Fatalf("can't unmarshal data in list-task response %v", uErr)
+	}
+
+	fmt.Printf("your tasks: \n%s\n", taskListRes.String())
+}
+
 func runCommand(command string, connection net.Conn) {
 
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
@@ -226,7 +252,7 @@ func runCommand(command string, connection net.Conn) {
 	case "new-task":
 		newTask(command, connection)
 	case "list-task":
-		// ToDo list task
+		listTask(command, connection)
 	case "tasks-date":
 		// ToDo tasksByDate
 	case "exit":

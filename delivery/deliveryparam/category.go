@@ -19,7 +19,6 @@ func NewCategoryRequest(title string, color string, authenticatedUserId uint) *C
 		authenticatedUserId: authenticatedUserId,
 	}
 }
-
 func (c *CategoryRequest) GetTitle() string {
 	return c.title
 }
@@ -171,7 +170,6 @@ func (c *CategoryListResponse) String() string {
 
 	return categoriesStr.String()
 }
-
 func NewCategoryListResponse() *CategoryListResponse {
 	return &CategoryListResponse{categories: make([]*entity.Category, 0)}
 }

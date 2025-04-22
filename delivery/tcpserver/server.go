@@ -249,28 +249,31 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		}
 
 		log.Printf("task [%s] by id: [%d] is create!\n", taskResponse.GetTitle(), taskResponse.GetTaskId())
-		/*case "list-task":
+	case "list-task":
 
-		responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(0))
+		var taskListReq = deliveryparam.NewListTaskRequest(0)
+		var buffer = make([]byte, 500)
+		numberOfReadBytes, rErr := connection.Read(buffer)
+		if rErr != nil {
+			log.Printf("can't read data from connection in list-task, error: %v", rErr)
+		}
+		if uErr := json.Unmarshal(buffer[:numberOfReadBytes], taskListReq); uErr != nil {
+			log.Printf("can't unmarshal data in list-category response %v", uErr)
+		}
+
+		responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(taskListReq.GetAuthenticatedUserId()))
 		if lErr != nil {
 			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
 				log.Println("can't write data to connection", wErr)
 			}
 		}
-
 		data, mErr := json.Marshal(responseListTask)
 		if mErr != nil {
 			log.Println("can't marshal responseCreatedTask:", mErr)
-
-			//continue
 		}
-
 		if _, wErr := connection.Write(data); wErr != nil {
 			log.Println("can't write data to connection", wErr)
-
-			//continue
 		}
-		*/
 	}
 }
 

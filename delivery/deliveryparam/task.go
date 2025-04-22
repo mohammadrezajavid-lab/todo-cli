@@ -1,6 +1,10 @@
 package deliveryparam
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"strings"
+)
 
 type TaskRequest struct {
 	title               string
@@ -130,7 +134,82 @@ func (t *TaskResponse) UnmarshalJSON(data []byte) error {
 }
 
 type ListTaskRequest struct {
+	authenticatedUserId uint
+}
+
+func NewListTaskRequest(authenticatedUserId uint) *ListTaskRequest {
+	return &ListTaskRequest{authenticatedUserId: authenticatedUserId}
+}
+func (t *ListTaskRequest) GetAuthenticatedUserId() uint {
+	return t.authenticatedUserId
+}
+func (t *ListTaskRequest) SetAuthenticatedUserId(authenticatedUserId uint) {
+	t.authenticatedUserId = authenticatedUserId
+}
+func (t *ListTaskRequest) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"authenticatedUserId": t.GetAuthenticatedUserId(),
+	})
+}
+func (t *ListTaskRequest) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		AuthenticatedUserId uint `json:"authenticatedUserId"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetAuthenticatedUserId(aux.AuthenticatedUserId)
+
+	return nil
 }
 
 type ListTaskResponse struct {
+	tasks []*entity.Task
+}
+
+func NewListTaskResponse() *ListTaskResponse {
+	return &ListTaskResponse{
+		tasks: make([]*entity.Task, 0),
+	}
+}
+func (t *ListTaskResponse) GetTasks() []*entity.Task {
+	return t.tasks
+}
+func (t *ListTaskResponse) SetTasks(tasks []*entity.Task) {
+	t.tasks = tasks
+}
+func (t *ListTaskResponse) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"tasks": t.GetTasks(),
+	})
+}
+func (t *ListTaskResponse) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Tasks []*entity.Task `json:"tasks"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetTasks(aux.Tasks)
+
+	return nil
+}
+
+func (t *ListTaskResponse) String() string {
+
+	var categoriesStr strings.Builder = strings.Builder{}
+	for _, cat := range t.GetTasks() {
+
+		categoriesStr.WriteString(cat.String())
+	}
+
+	return categoriesStr.String()
 }
