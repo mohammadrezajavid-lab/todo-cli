@@ -23,13 +23,13 @@ func NewService(taskRepository servicecontract.ServiceTaskRepository,
 
 func (s *Service) CreateTask(taskReq *taskparam.RequestTask) (*taskparam.ResponseTask, error) {
 
-	//var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.Task.categoryId, taskReq.authenticatedUserId)
-	//if cErr != nil {
-	//	return nil, cErr
-	//}
-	//if !ok {
-	//	return nil, fmt.Errorf("user does not have this categoryId: %d", taskReq.Task.categoryId)
-	//}
+	var ok, cErr = s.categoryRepository.CheckCategoryId(taskReq.GetCategoryId(), taskReq.GetAuthenticatedUserId())
+	if cErr != nil {
+		return nil, cErr
+	}
+	if !ok {
+		return nil, fmt.Errorf("user does not have this categoryId: %d", taskReq.GetCategoryId())
+	}
 
 	task, err := s.taskRepository.CreateNewTask(entity.NewTask(0, taskReq.GetTitle(), taskReq.GetDueDate(), taskReq.GetCategoryId(), taskReq.GetAuthenticatedUserId()))
 	if err != nil {

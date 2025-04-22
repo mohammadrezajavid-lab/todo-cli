@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 )
 
 var authenticatedUserId uint
@@ -130,7 +131,7 @@ func newCategory(command string, connection net.Conn) {
 	if rErr != nil {
 		log.Fatalf("can't read data from connection in new-category, error: %v", rErr)
 	}
-	var responseCreateCategory *deliveryparam.CategoryResponse = deliveryparam.NewCategoryResponse("", 0, nil)
+	var responseCreateCategory = deliveryparam.NewCategoryResponse("", 0, nil)
 	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], responseCreateCategory); uErr != nil {
 		log.Fatalf("can't unmarshal data in new-category response %v", uErr)
 	}
@@ -164,7 +165,47 @@ func listCategory(command string, connection net.Conn) {
 		log.Fatalf("can't unmarshal data in list-category response %v", uErr)
 	}
 
-	fmt.Printf("your categoreis: %s\n", catListRes.String())
+	fmt.Printf("your categoreis: \n%s\n", catListRes.String())
+}
+
+func newTask(command string, connection net.Conn) {
+
+	fmt.Println("Create New Task!")
+
+	fmt.Print("enter title: ")
+	var title string = pkg.ReadInput()
+
+	fmt.Print("enter due date: ")
+	var dueDate string = pkg.ReadInput()
+
+	fmt.Print("enter category: ")
+	var categoryId, _ = strconv.Atoi(pkg.ReadInput())
+
+	sendCommand(command, connection)
+
+	var reqNewTask = deliveryparam.NewTaskRequest(title, dueDate, uint(categoryId), authenticatedUserId)
+	marshalReqNewTask, mErr := json.Marshal(reqNewTask)
+	if mErr != nil {
+		log.Fatalf("can't marshal data new-task: %v", mErr)
+	}
+	if _, wErr := connection.Write(marshalReqNewTask); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawResponse = make([]byte, 1024)
+	numberOfReadBytes, rErr := connection.Read(rawResponse)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in new-task, error: %v", rErr)
+	}
+	var resNewTask = deliveryparam.NewTaskResponse("", 0, nil)
+	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], resNewTask); uErr != nil {
+		log.Fatalf("can't unmarshal data in new-category response %v", uErr)
+	}
+	if resNewTask.GetError() != nil {
+		log.Fatalf("can't create this category, \nerror: %v", resNewTask.GetError())
+	}
+
+	fmt.Printf("task [%s] by id: [%d] is create!\n", resNewTask.GetTitle(), resNewTask.GetTaskId())
 }
 
 func runCommand(command string, connection net.Conn) {
@@ -180,10 +221,10 @@ func runCommand(command string, connection net.Conn) {
 		registerUser(command, connection)
 	case "new-category":
 		newCategory(command, connection)
-	case "new-task":
-		// newTask(command, connection)
 	case "list-category":
 		listCategory(command, connection)
+	case "new-task":
+		newTask(command, connection)
 	case "list-task":
 		// ToDo list task
 	case "tasks-date":
