@@ -68,8 +68,9 @@ type CategoryResponse struct {
 	error      error
 }
 
-func NewCategoryResponse(categoryId uint, error error) *CategoryResponse {
+func NewCategoryResponse(title string, categoryId uint, error error) *CategoryResponse {
 	return &CategoryResponse{
+		title:      title,
 		categoryId: categoryId,
 		error:      error,
 	}

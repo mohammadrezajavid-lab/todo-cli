@@ -106,6 +106,8 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		if _, wErr := connection.Write(serializedResUser); wErr != nil {
 			log.Fatalf("can't write data to connection: %v", wErr)
 		}
+
+		log.Printf("login user by email: %s", res.GetEmail())
 	case "register-user":
 
 		var rawUser = make([]byte, 1024)
@@ -143,7 +145,6 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			log.Fatalf("can't write data to connection: %v", wErr)
 		}
 		log.Printf("registered user by email: %v", responseRegisterUser.GetEmail())
-
 	case "new-category":
 
 		var rawCategory = make([]byte, 1024)
@@ -160,7 +161,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		if cErr != nil {
 			log.Printf("can't create category \nerror: %v", cErr)
 
-			responseCreateCategory := deliveryparam.NewCategoryResponse(createCategoryResponse.GetCategory().GetId(), cErr)
+			responseCreateCategory := deliveryparam.NewCategoryResponse("", 0, cErr)
 			serializedData, mErr := json.Marshal(responseCreateCategory)
 			if mErr != nil {
 				log.Printf("can't marshal data  in new-category: %v", mErr)
@@ -172,7 +173,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			return
 		}
 
-		responseCreateCategory := deliveryparam.NewCategoryResponse(createCategoryResponse.GetCategory().GetId(), nil)
+		responseCreateCategory := deliveryparam.NewCategoryResponse(createCategoryResponse.GetCategory().GetTitle(), createCategoryResponse.GetCategory().GetId(), nil)
 		serializedData, mErr := json.Marshal(responseCreateCategory)
 		if mErr != nil {
 			log.Printf("can't marshal data  in new-category: %v", mErr)
@@ -182,7 +183,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			log.Fatalf("can't write data to connection: %v", wErr)
 		}
 
-		log.Printf("category %s is created", responseCreateCategory.GetTitle())
+		log.Printf("category [%s] by id: [%d] is create!\n", responseCreateCategory.GetTitle(), responseCreateCategory.GetCategoryId())
 		/*case "list-task":
 
 			responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(0))

@@ -130,7 +130,7 @@ func newCategory(command string, connection net.Conn) {
 	if rErr != nil {
 		log.Fatalf("can't read data from connection in new-category, error: %v", rErr)
 	}
-	var responseCreateCategory *deliveryparam.CategoryResponse = deliveryparam.NewCategoryResponse(0, nil)
+	var responseCreateCategory *deliveryparam.CategoryResponse = deliveryparam.NewCategoryResponse("", 0, nil)
 	if uErr := json.Unmarshal(rawResponse[:numberOfReadBytes], responseCreateCategory); uErr != nil {
 		log.Fatalf("can't unmarshal data in new-category response %v", uErr)
 	}
@@ -138,7 +138,7 @@ func newCategory(command string, connection net.Conn) {
 		log.Fatalf("can't create this category, \nerror: %v", responseCreateCategory.GetError())
 	}
 
-	fmt.Printf("category [%s] is create!\n", responseCreateCategory.GetTitle())
+	fmt.Printf("category [%s] by id: [%d] is create!\n", responseCreateCategory.GetTitle(), responseCreateCategory.GetCategoryId())
 }
 
 func runCommand(command string, connection net.Conn) {

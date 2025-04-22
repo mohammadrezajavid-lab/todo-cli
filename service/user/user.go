@@ -24,7 +24,7 @@ func (s *Service) Login(reqUser *userparam.RequestUser) (*userparam.ResponseUser
 		return nil, lErr
 	}
 
-	return userparam.NewResponseUser(user.GetId()), nil
+	return userparam.NewResponseUser(user.GetId(), user.GetEmail()), nil
 }
 
 func (s *Service) RegisterUser(reqUser *userparam.RequestRegisterUser) (*userparam.ResponseRegisterUser, error) {
