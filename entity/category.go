@@ -55,6 +55,10 @@ func (c *Category) SetColor(color string) {
 	c.color = color
 }
 
+func (c *Category) SetUserId(userId uint) {
+	c.userId = userId
+}
+
 func (c *Category) String() string {
 	return fmt.Sprintf("Id: %d, Title: %s, Color: %s, UserId: %d\n",
 		c.GetId(),
@@ -71,4 +75,25 @@ func (c *Category) MarshalJSON() ([]byte, error) {
 		"color":  c.GetColor(),
 		"userId": c.GetUserId(),
 	})
+}
+
+func (c *Category) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Id     uint   `json:"id"`
+		Title  string `json:"title"`
+		Color  string `json:"color"`
+		UserId uint   `json:"userId"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	c.SetId(aux.Id)
+	c.SetTitle(aux.Title)
+	c.SetColor(aux.Color)
+	c.SetUserId(aux.UserId)
+
+	return nil
 }

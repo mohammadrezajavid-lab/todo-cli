@@ -1,6 +1,10 @@
 package deliveryparam
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"strings"
+)
 
 type CategoryRequest struct {
 	title               string
@@ -42,7 +46,6 @@ func (c *CategoryRequest) MarshalJSON() ([]byte, error) {
 		"authenticatedUserId": c.GetAuthenticatedUserId(),
 	})
 }
-
 func (c *CategoryRequest) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		Title               string `json:"title"`
@@ -93,7 +96,6 @@ func (cr *CategoryResponse) SetCategoryId(categoryId uint) {
 func (cr *CategoryResponse) SetError(err error) {
 	cr.error = err
 }
-
 func (cr *CategoryResponse) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(map[string]any{
@@ -102,7 +104,6 @@ func (cr *CategoryResponse) MarshalJSON() ([]byte, error) {
 		"error":      cr.GetError(),
 	})
 }
-
 func (cr *CategoryResponse) UnmarshalJSON(data []byte) error {
 	var aux struct {
 		Title      string `json:"title"`
@@ -118,6 +119,85 @@ func (cr *CategoryResponse) UnmarshalJSON(data []byte) error {
 	cr.SetTitle(aux.Title)
 	cr.SetCategoryId(aux.CategoryId)
 	cr.SetError(aux.Error)
+
+	return nil
+}
+
+type CategoryListRequest struct {
+	authenticatedUserId uint
+}
+
+func NewCategoryListRequest(authenticatedUserId uint) *CategoryListRequest {
+	return &CategoryListRequest{authenticatedUserId: authenticatedUserId}
+}
+func (c *CategoryListRequest) GetAuthenticatedUserId() uint {
+	return c.authenticatedUserId
+}
+func (c *CategoryListRequest) SetAuthenticatedUserId(authenticatedUserId uint) {
+	c.authenticatedUserId = authenticatedUserId
+}
+func (c *CategoryListRequest) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"authenticatedUserId": c.GetAuthenticatedUserId(),
+	})
+}
+func (c *CategoryListRequest) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		AuthenticatedUserId uint `json:"authenticatedUserId"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	c.SetAuthenticatedUserId(aux.AuthenticatedUserId)
+
+	return nil
+}
+
+type CategoryListResponse struct {
+	categories []*entity.Category
+}
+
+func (c *CategoryListResponse) String() string {
+
+	var categoriesStr strings.Builder = strings.Builder{}
+	for _, cat := range c.GetCategories() {
+
+		categoriesStr.WriteString(cat.String())
+	}
+
+	return categoriesStr.String()
+}
+
+func NewCategoryListResponse() *CategoryListResponse {
+	return &CategoryListResponse{categories: make([]*entity.Category, 0)}
+}
+func (c *CategoryListResponse) GetCategories() []*entity.Category {
+	return c.categories
+}
+func (c *CategoryListResponse) SetCategories(categories []*entity.Category) {
+	c.categories = categories
+}
+func (c *CategoryListResponse) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"categories": c.GetCategories(),
+	})
+}
+func (c *CategoryListResponse) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		Categories []*entity.Category `json:"categories"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	c.SetCategories(aux.Categories)
 
 	return nil
 }

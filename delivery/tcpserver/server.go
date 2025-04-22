@@ -93,7 +93,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			}
 
 			if _, wErr := connection.Write(serializedResUser); wErr != nil {
-				log.Fatalf("can't write data to connection: %v", wErr)
+				log.Printf("can't write data to connection: %v", wErr)
 			}
 			return
 		}
@@ -104,7 +104,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		}
 
 		if _, wErr := connection.Write(serializedResUser); wErr != nil {
-			log.Fatalf("can't write data to connection: %v", wErr)
+			log.Printf("can't write data to connection: %v", wErr)
 		}
 
 		log.Printf("login user by email: %s", res.GetEmail())
@@ -131,7 +131,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			}
 
 			if _, wErr := connection.Write(serializedResUser); wErr != nil {
-				log.Fatalf("can't write data to connection: %v", wErr)
+				log.Printf("can't write data to connection: %v", wErr)
 			}
 			return
 		}
@@ -142,7 +142,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		}
 
 		if _, wErr := connection.Write(serializedResUser); wErr != nil {
-			log.Fatalf("can't write data to connection: %v", wErr)
+			log.Printf("can't write data to connection: %v", wErr)
 		}
 		log.Printf("registered user by email: %v", responseRegisterUser.GetEmail())
 	case "new-category":
@@ -168,7 +168,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 			}
 
 			if _, wErr := connection.Write(serializedData); wErr != nil {
-				log.Fatalf("can't write data to connection: %v", wErr)
+				log.Printf("can't write data to connection: %v", wErr)
 			}
 			return
 		}
@@ -180,10 +180,36 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		}
 
 		if _, wErr := connection.Write(serializedData); wErr != nil {
-			log.Fatalf("can't write data to connection: %v", wErr)
+			log.Printf("can't write data to connection: %v", wErr)
 		}
 
 		log.Printf("category [%s] by id: [%d] is create!\n", responseCreateCategory.GetTitle(), responseCreateCategory.GetCategoryId())
+	case "list-category":
+
+		var catListReq *deliveryparam.CategoryListRequest = deliveryparam.NewCategoryListRequest(0)
+		var buffer = make([]byte, 500)
+		numberOfReadBytes, rErr := connection.Read(buffer)
+		if rErr != nil {
+			log.Printf("can't read data from connection in list-category, error: %v", rErr)
+		}
+		if uErr := json.Unmarshal(buffer[:numberOfReadBytes], catListReq); uErr != nil {
+			log.Printf("can't unmarshal data in list-category response %v", uErr)
+		}
+
+		responseListCategory, lErr := categoryService.ListCategory(categoryparam.NewListRequest(catListReq.GetAuthenticatedUserId()))
+		if lErr != nil {
+			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
+				log.Println("can't write data to connection", wErr)
+			}
+		}
+		data, mErr := json.Marshal(responseListCategory)
+		if mErr != nil {
+			log.Println("can't marshal responseCreatedTask:", mErr)
+		}
+		if _, wErr := connection.Write(data); wErr != nil {
+			log.Println("can't write data to connection", wErr)
+		}
+
 		/*case "list-task":
 
 			responseListTask, lErr := taskService.ListTask(taskparam.NewListRequest(0))
@@ -230,26 +256,7 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 
 				//continue
 			}
-		case "list-category":
-			responseListCategory, lErr := categoryService.ListCategory(categoryparam.NewListRequest(0))
-			if lErr != nil {
-				if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
-					log.Println("can't write data to connection", wErr)
-				}
-			}
-
-			data, mErr := json.Marshal(responseListCategory)
-			if mErr != nil {
-				log.Println("can't marshal responseCreatedTask:", mErr)
-
-				//continue
-			}
-
-			if _, wErr := connection.Write(data); wErr != nil {
-				log.Println("can't write data to connection", wErr)
-
-				//continue
-			}*/
+		*/
 	}
 }
 
