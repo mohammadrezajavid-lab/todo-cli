@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
@@ -41,7 +42,11 @@ func main() {
 	var categoryService *category.Service = category.NewService(categoryMemoryRepo)
 	var taskService *task.Service = task.NewService(taskMemoryRepo, categoryMemoryRepo)
 
-	listener, err := net.Listen("tcp", "127.0.0.1:1999")
+	var ipAddr string
+	flag.StringVar(&ipAddr, "ip", "127.0.0.1:1999", "set your ip address for listen in server")
+	flag.Parse()
+
+	listener, err := net.Listen("tcp", ipAddr)
 	if err != nil {
 		panic("can not create a listener, error:" + err.Error())
 	}
