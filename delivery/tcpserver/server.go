@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/delivery/deliveryparam"
 	"gocasts.ir/go-fundamentals/todo-cli/pkg"
 	"gocasts.ir/go-fundamentals/todo-cli/repository/memoryStore"
@@ -14,13 +15,28 @@ import (
 	"gocasts.ir/go-fundamentals/todo-cli/service/user/userparam"
 	"log"
 	"net"
+	"os"
 )
+
+func init() {
+
+	func() {
+		fUsers, _ := os.OpenFile(constant.UsersFile, os.O_CREATE, constant.PermFile)
+		fTasks, _ := os.OpenFile(constant.TasksFile, os.O_CREATE, constant.PermFile)
+		fCategories, _ := os.OpenFile(constant.CategoriesFile, os.O_CREATE, constant.PermFile)
+
+		_ = fUsers.Close()
+		_ = fTasks.Close()
+		_ = fCategories.Close()
+	}()
+}
 
 func main() {
 
-	var taskMemoryRepo *memoryStore.TaskMemory = memoryStore.NewTaskMemory()
-	var categoryMemoryRepo *memoryStore.CategoryMemory = memoryStore.NewCategoryMemory()
 	var userMemoryRepo *memoryStore.UserMemory = memoryStore.NewUserMemory()
+	var categoryMemoryRepo *memoryStore.CategoryMemory = memoryStore.NewCategoryMemory()
+	var taskMemoryRepo *memoryStore.TaskMemory = memoryStore.NewTaskMemory()
+
 	var userService *user.Service = user.NewService(userMemoryRepo)
 	var categoryService *category.Service = category.NewService(categoryMemoryRepo)
 	var taskService *task.Service = task.NewService(taskMemoryRepo, categoryMemoryRepo)

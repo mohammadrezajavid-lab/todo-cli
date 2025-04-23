@@ -2,6 +2,6 @@
 *.txt
 *.exe
 *.iml
-*.json
+#*.json
 ./service/server.go
 ./client/client.go

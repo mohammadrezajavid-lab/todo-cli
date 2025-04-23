@@ -2,15 +2,26 @@ package memoryStore
 
 import (
 	"fmt"
+	"gocasts.ir/go-fundamentals/todo-cli/constant"
 	"gocasts.ir/go-fundamentals/todo-cli/entity"
+	"gocasts.ir/go-fundamentals/todo-cli/repository/filestore"
 )
 
 type CategoryMemory struct {
-	categories []*entity.Category
+	categories    []*entity.Category
+	categoryStore *filestore.Store[entity.Category]
 }
 
 func NewCategoryMemory() *CategoryMemory {
-	return &CategoryMemory{make([]*entity.Category, 0)}
+
+	var categoryMemory = &CategoryMemory{categories: make([]*entity.Category, 0), categoryStore: new(filestore.Store[entity.Category])}
+
+	var categoryStore *filestore.Store[entity.Category] = filestore.NewStore[entity.Category](constant.CategoriesFile, constant.PermFile)
+	categoryMemory.SetCategories(append(categoryMemory.GetCategories(), categoryStore.Load(new(entity.Category))...))
+
+	categoryMemory.SetCategoryStore(categoryStore)
+
+	return categoryMemory
 }
 
 func (cm *CategoryMemory) GetCategories() []*entity.Category {
@@ -19,6 +30,14 @@ func (cm *CategoryMemory) GetCategories() []*entity.Category {
 
 func (cm *CategoryMemory) SetCategories(categories []*entity.Category) {
 	cm.categories = categories
+}
+
+func (cm *CategoryMemory) GetCategoryStore() *filestore.Store[entity.Category] {
+	return cm.categoryStore
+}
+
+func (cm *CategoryMemory) SetCategoryStore(categoryStore *filestore.Store[entity.Category]) {
+	cm.categoryStore = categoryStore
 }
 
 func (cm *CategoryMemory) CheckCategoryId(categoryId uint, userId uint) (bool, error) {
@@ -34,9 +53,14 @@ func (cm *CategoryMemory) CheckCategoryId(categoryId uint, userId uint) (bool, e
 
 func (cm *CategoryMemory) CreateNewCategory(c *entity.Category) (*entity.Category, error) {
 
+	// set id for new category
 	c.SetId(uint(len(cm.GetCategories()) + 1))
 
+	// append new category to array of category
 	cm.SetCategories(append(cm.GetCategories(), c))
+
+	// write new category to database
+	cm.GetCategoryStore().Save(c)
 
 	return c, nil
 }

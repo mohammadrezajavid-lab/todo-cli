@@ -48,16 +48,6 @@ func (s *Store[T]) Load(*T) []*T {
 	return objects
 }
 
-// GetObjectsStore Getter method
-//func (s *Store[T]) GetObjectsStore() []*T {
-//	return s.entityStore
-//}
-
-// SetObjectsStore Getter method
-//func (s *Store[T]) SetObjectsStore(entityStore []*T) {
-//	s.entityStore = entityStore
-//}
-
 // NewStore constructor method
 func NewStore[T any](filePath string, permFile os.FileMode) *Store[T] {
 	return &Store[T]{
