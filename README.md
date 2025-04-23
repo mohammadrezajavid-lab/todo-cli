@@ -6,7 +6,7 @@ A practice project implementing a simple todo app while attending the [gocasts](
 
 ```bash
 # build client project
-cd ./delivery/client
+cd ./delivery/tcpclient
 go build -o client-todocli client.go
 
 # build server project
@@ -23,7 +23,7 @@ go build -o server-todocli server.go
 ./client-todocli --command [login | register-user | new-task| new-category | list-task | list-category | tasks-date | exit] --ip [ipAddr:port]
 
 # run server (The server is available by default at the following address: 127.0.0.1:1999)
-./server-todocli
+./server-todocli -ip [ipAddr:port]
 
 ```
 ## Entities
