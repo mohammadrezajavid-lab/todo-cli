@@ -60,3 +60,14 @@ func (s *Service) ListTaskByDueDate(listReq *taskparam.ListByDateRequest) (*task
 
 	return taskparam.NewListByDateResponse(tasks), nil
 }
+
+func (s *Service) ListTaskByStatus(listReq *taskparam.ListByStatusRequest) (*taskparam.ListByStatusResponse, error) {
+
+	tasks, err := s.taskRepository.ListTaskByStatus(listReq.GetAuthenticatedUserId(), listReq.GetTaskStatus())
+	if err != nil {
+
+		return nil, fmt.Errorf("can't list tasks %v", err)
+	}
+
+	return taskparam.NewListByStatusResponse(tasks), nil
+}

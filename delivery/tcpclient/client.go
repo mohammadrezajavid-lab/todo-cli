@@ -265,6 +265,41 @@ func tasksByDate(command string, connection net.Conn) {
 	fmt.Printf("your tasks: \n%s\n", taskListDateRes.String())
 }
 
+func listTaskStatus(command string, connection net.Conn) {
+
+	fmt.Println("list tasks is Done/UnDone...")
+
+	fmt.Println("enter Done/UnDone: ")
+	var taskStatus string = pkg.ReadInput()
+
+	if taskStatus != "Done" || taskStatus != "UnDone" {
+		log.Fatalf("Input value is invalid.")
+	}
+
+	sendCommand(command, connection)
+
+	var taskList = deliveryparam.NewListTaskByStatusRequest(authenticatedUserId, taskStatus)
+	marshalTaskList, mErr := json.Marshal(taskList)
+	if mErr != nil {
+		log.Fatalf("can't marshal data list-task-status: %v", mErr)
+	}
+	if _, wErr := connection.Write(marshalTaskList); wErr != nil {
+		log.Fatalf("can't write data to connection: %v", wErr)
+	}
+
+	var rawTasks = make([]byte, 2048)
+	numberOfReadBytes, rErr := connection.Read(rawTasks)
+	if rErr != nil {
+		log.Fatalf("can't read data from connection in list-task-status, error: %v", rErr)
+	}
+	var tasksStatusRes = deliveryparam.NewListTaskByStatusResponse()
+	if uErr := json.Unmarshal(rawTasks[:numberOfReadBytes], tasksStatusRes); uErr != nil {
+		log.Fatalf("can't unmarshal data in list-task response %v", uErr)
+	}
+
+	fmt.Printf("your tasks: \n%s\n", tasksStatusRes.String())
+}
+
 func runCommand(command string, connection net.Conn) {
 
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
@@ -286,6 +321,8 @@ func runCommand(command string, connection net.Conn) {
 		listTask(command, connection)
 	case "tasks-date":
 		tasksByDate(command, connection)
+	case "list-task-status":
+		listTaskStatus(command, connection)
 	case "exit":
 		sendCommand(command, connection)
 		os.Exit(0)

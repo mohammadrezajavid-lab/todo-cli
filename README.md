@@ -72,6 +72,6 @@ User
     User can see the List of its tasks [*]
     User can see the Today’s Tasks
     User can see the Tasks by date [*]
-    User can Done/Undone a task
-    User can Edit a task
+    User can Done/Undone a task [*]
+    User can Edit a task []
     User can Edit a category

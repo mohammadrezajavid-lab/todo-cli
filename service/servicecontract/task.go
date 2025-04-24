@@ -6,4 +6,5 @@ type ServiceTaskRepository interface {
 	CreateNewTask(t *entity.Task) (*entity.Task, error)
 	ListUserTasks(userId uint) ([]*entity.Task, error)
 	ListTaskByDueDate(userId uint, dueDate string) ([]*entity.Task, error)
+	ListTaskByStatus(userId uint, taskStatus bool) ([]*entity.Task, error)
 }

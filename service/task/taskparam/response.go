@@ -54,3 +54,19 @@ func (lr *ListByDateResponse) MarshalJSON() ([]byte, error) {
 		"tasks": lr.GetTasks(),
 	})
 }
+
+type ListByStatusResponse struct {
+	tasks []*entity.Task
+}
+
+func NewListByStatusResponse(tasks []*entity.Task) *ListByStatusResponse {
+	return &ListByStatusResponse{tasks: tasks}
+}
+func (lr *ListByStatusResponse) GetTasks() []*entity.Task {
+	return lr.tasks
+}
+func (lr *ListByStatusResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"tasks": lr.GetTasks(),
+	})
+}

@@ -61,3 +61,21 @@ func (lr *ListByDateRequest) GetUserId() uint {
 func (lr *ListByDateRequest) GetDueDate() string {
 	return lr.dueDate
 }
+
+type ListByStatusRequest struct {
+	authenticatedUserId uint
+	taskStatus          bool
+}
+
+func NewListByStatusRequest(authenticatedUserId uint, taskStatus bool) *ListByStatusRequest {
+	return &ListByStatusRequest{
+		authenticatedUserId: authenticatedUserId,
+		taskStatus:          taskStatus,
+	}
+}
+func (req *ListByStatusRequest) GetAuthenticatedUserId() uint {
+	return req.authenticatedUserId
+}
+func (req *ListByStatusRequest) GetTaskStatus() bool {
+	return req.taskStatus
+}

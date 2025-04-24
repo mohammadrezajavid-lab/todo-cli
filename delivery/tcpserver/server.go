@@ -320,6 +320,31 @@ func runCommand(connection net.Conn, command string, userService *user.Service, 
 		if _, wErr := connection.Write(data); wErr != nil {
 			log.Println("can't write data to connection", wErr)
 		}
+	case "list-task-status":
+
+		var taskListReq = deliveryparam.NewListTaskByStatusRequest(0, "")
+		var buffer = make([]byte, 1024)
+		numberOfReadBytes, rErr := connection.Read(buffer)
+		if rErr != nil {
+			log.Printf("can't read data from connection in list-task-status, error: %v", rErr)
+		}
+		if uErr := json.Unmarshal(buffer[:numberOfReadBytes], taskListReq); uErr != nil {
+			log.Printf("can't unmarshal data in list-category response %v", uErr)
+		}
+
+		taskListRes, lErr := taskService.ListTaskByStatus(taskparam.NewListByStatusRequest(taskListReq.GetAuthenticatedUserId(), taskListReq.GetTaskStatus()))
+		if lErr != nil {
+			if _, wErr := connection.Write([]byte(lErr.Error())); wErr != nil {
+				log.Println("can't write data to connection", wErr)
+			}
+		}
+		data, mErr := json.Marshal(taskListRes)
+		if mErr != nil {
+			log.Println("can't marshal taskListRes 'in list by status' ", mErr)
+		}
+		if _, wErr := connection.Write(data); wErr != nil {
+			log.Println("can't write data to connection 'in list by status' ", wErr)
+		}
 	}
 }
 

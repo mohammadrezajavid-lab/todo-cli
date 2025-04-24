@@ -80,3 +80,17 @@ func (tm *TaskMemory) ListTaskByDueDate(userId uint, dueDate string) ([]*entity.
 
 	return userTasks, nil
 }
+
+func (tm *TaskMemory) ListTaskByStatus(userId uint, taskStatus bool) ([]*entity.Task, error) {
+
+	userTasks := make([]*entity.Task, 0)
+	for _, t := range tm.GetTasks() {
+
+		if userId == t.GetUserId() && t.GetIsDone() == taskStatus {
+
+			userTasks = append(userTasks, t)
+		}
+	}
+
+	return userTasks, nil
+}

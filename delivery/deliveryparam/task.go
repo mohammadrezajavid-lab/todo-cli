@@ -202,7 +202,6 @@ func (t *ListTaskResponse) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
 func (t *ListTaskResponse) String() string {
 
 	var categoriesStr strings.Builder = strings.Builder{}
@@ -297,6 +296,107 @@ func (t *ListTaskByDateResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 func (t *ListTaskByDateResponse) String() string {
+
+	var categoriesStr strings.Builder = strings.Builder{}
+	for _, cat := range t.GetTasks() {
+
+		categoriesStr.WriteString(cat.String())
+	}
+
+	return categoriesStr.String()
+}
+
+type ListTaskByStatusRequest struct {
+	authenticatedUserId uint
+	taskStatus          bool // true = Done & false = UnDone
+}
+
+func NewListTaskByStatusRequest(authenticatedUserId uint, taskStatus string) *ListTaskByStatusRequest {
+
+	var status bool
+
+	if taskStatus == "Done" {
+		status = true
+	} else {
+		status = false
+	}
+
+	return &ListTaskByStatusRequest{authenticatedUserId: authenticatedUserId, taskStatus: status}
+}
+func (t *ListTaskByStatusRequest) GetAuthenticatedUserId() uint {
+	return t.authenticatedUserId
+}
+func (t *ListTaskByStatusRequest) SetAuthenticatedUserId(authenticatedUserId uint) {
+	t.authenticatedUserId = authenticatedUserId
+}
+func (t *ListTaskByStatusRequest) GetTaskStatus() bool {
+	return t.taskStatus
+}
+func (t *ListTaskByStatusRequest) SetTaskStatus(taskStatus bool) {
+	t.taskStatus = taskStatus
+}
+func (t *ListTaskByStatusRequest) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"authenticatedUserId": t.GetAuthenticatedUserId(),
+		"taskStatus":          t.GetTaskStatus(),
+	})
+}
+func (t *ListTaskByStatusRequest) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		AuthenticatedUserId uint `json:"authenticatedUserId"`
+		TaskStatus          bool `json:"taskStatus"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetAuthenticatedUserId(aux.AuthenticatedUserId)
+	t.SetTaskStatus(aux.TaskStatus)
+
+	return nil
+}
+
+type ListTaskByStatusResponse struct {
+	tasks []*entity.Task
+}
+
+func NewListTaskByStatusResponse() *ListTaskByStatusResponse {
+
+	return &ListTaskByStatusResponse{
+		tasks: make([]*entity.Task, 0),
+	}
+}
+func (t *ListTaskByStatusResponse) GetTasks() []*entity.Task {
+	return t.tasks
+}
+func (t *ListTaskByStatusResponse) SetTasks(tasks []*entity.Task) {
+	t.tasks = tasks
+}
+func (t *ListTaskByStatusResponse) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(map[string]any{
+		"tasks": t.GetTasks(),
+	})
+}
+func (t *ListTaskByStatusResponse) UnmarshalJSON(data []byte) error {
+
+	var aux struct {
+		Tasks []*entity.Task `json:"tasks"`
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+
+		return err
+	}
+
+	t.SetTasks(aux.Tasks)
+
+	return nil
+}
+func (t *ListTaskByStatusResponse) String() string {
 
 	var categoriesStr strings.Builder = strings.Builder{}
 	for _, cat := range t.GetTasks() {
