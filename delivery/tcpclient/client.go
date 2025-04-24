@@ -267,7 +267,7 @@ func tasksByDate(command string, connection net.Conn) {
 
 func listTaskStatus(command string, connection net.Conn) {
 
-	fmt.Println("list tasks is Done/UnDone...")
+	fmt.Println("List tasks is Done/UnDone...")
 
 	fmt.Println("enter Done/UnDone: ")
 	var taskStatus string = pkg.ReadInput()
@@ -300,6 +300,20 @@ func listTaskStatus(command string, connection net.Conn) {
 	fmt.Printf("your tasks: \n%s\n", tasksStatusRes.String())
 }
 
+func editTask(command string, connection net.Conn) {
+
+	//fmt.Println("Edit one Task...")
+	//
+	//fmt.Println("enter task ID: ")
+	//id, _ := strconv.Atoi(pkg.ReadInput())
+	//var taskId uint = uint(id)
+	//
+	//sendCommand(command, connection)
+	// TODO
+	fmt.Println("not implemented edit Task...")
+
+}
+
 func runCommand(command string, connection net.Conn) {
 
 	if command != "login-user" && command != "register-user" && command != "exit" && authenticatedUserId == 0 {
@@ -323,6 +337,8 @@ func runCommand(command string, connection net.Conn) {
 		tasksByDate(command, connection)
 	case "list-task-status":
 		listTaskStatus(command, connection)
+	case "edit-task":
+		editTask(command, connection)
 	case "exit":
 		sendCommand(command, connection)
 		os.Exit(0)

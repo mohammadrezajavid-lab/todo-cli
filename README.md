@@ -74,4 +74,4 @@ User
     User can see the Tasks by date [*]
     User can Done/Undone a task [*]
     User can Edit a task []
-    User can Edit a category
+    User can Edit a category []
