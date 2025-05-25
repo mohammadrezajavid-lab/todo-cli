@@ -12,7 +12,7 @@ Todo-CLI is a simple command-line interface (CLI) application for managing your 
     * Create new tasks and assign them to categories.
     * List all tasks for a user.
     * List tasks by due date.
-    * List tasks by their completion status (Done/UnDone).
+    * List tasks by their completion status (Done/Undone).
 * **Client-Server Communication**: Interaction via TCP/IP protocol with data exchanged in JSON format.
 * **Data Persistence**: User, task, and category data are stored in JSON files (`users.json`, `tasks.json`, `categories.json`) on the server for persistence.
 * **Command-Line Interface (CLI)**: Interact with the application using text-based commands in the terminal.
@@ -145,5 +145,22 @@ While this is a TCP-based application and not HTTP, the server handles commands 
     * `list-task-status` (Payload: `deliveryparam.ListTaskByStatusRequest`) -> Lists tasks by status for the authenticated user.
 * **Control**:
     * `exit` -> Signals the server that the client is disconnecting.
+
+---
+
+## 📝 Use Cases & Status
+
+
+* [x] User should be able to register.
+* [x] User should be able to log in.
+* [x] User can create a new category.
+* [x] User can add a new task.
+* [ ] User can see the list of categories with progress status. (Listing exists, progress status not implemented)
+* [x] User can see the list of their tasks.
+* [ ] User can see Today’s Tasks. (Can be partially achieved via tasks-date)
+* [x] User can see Tasks by date.
+* [ ] User can mark a task as Done/Undone. (Status-based listing exists, status change not implemented)
+* [ ] User can edit a task.
+* [ ] User can edit a category.
 
 ---
